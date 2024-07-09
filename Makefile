@@ -56,34 +56,41 @@
 #                                                                              #
 #  Usage:                                                                      #
 #    make <goal>                                                               #
-#      images: devel prod                                                      #
-#      tag:    tag-dev tag-prd                                                 #
-#      deploy: deploy-dev deploy-prd                                           #
-#              all deploy goals include podman login                           #
 #                                                                              #
-#      devel: build development image                                          #
-#      prod:  build production image                                           #
+#      ibm-pre-img  : ibm prerequisit images                                   #
+#        ibm-pre-dev: ibm prerequisit images for development                   #
+#        ibm-pre-prd: ibm prerequisit images for production                    #
 #                                                                              #
-#      tag-dev: tag dvelopment image for deployment / push                     #
-#      tag-prd: tag production image for deployment / push                     #
+#      img:     : build dbag images                                            #
+#        img-dev: build development image                                      #
+#        img-prd: build production image                                       #
+#                                                                              #
+#      tag:                                                                    #
+#        tag-dev: tag dvelopment image for deployment / push                   #
+#        tag-prd: tag production image for deployment / push                   #
+#                                                                              #
+#      deploy:  deploy-dev deploy-prd                                          #
+#               all deploy goals include podman login                          #
+#                                                                              #
+#                                                                              #
+#                                                                              #
 #                                                                              #
 #      deploy-dev: deploy / push development image to artifactory              #
 #      deploy-prd: deploy / push production image to artifactory               #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-#  Variables:                                                  #
+#  Variables:                                                                  #
 #    this list includes only variables that will be changed on regular basis   #
 #                                                                              #
-#    VER : MQ Version in FORM V.M.S.F                        #
+#    VER : MQ Version in FORM V.M.S.F                                          #
 #                                                                              #
-#    RELEASE: Used for different images with same MQ Version.             #
+#    RELEASE: Used for different images with same MQ Version.                  #
 #             Changes if new rpms or other tools are added to the same MQ      #
-#             version.                                         #
+#             version.                                                         #
 #             The release is included in image tag behinde letter 'r'          #
 #             It is important to use lower case 'r', upper case is reserved    #
-#             for images using C deamon.                    #
-#  
+#             for images using C deamon.                                       #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #  History:                                                                    #
@@ -113,7 +120,7 @@ AWK := awk
 # artifactory
 # ------------------------------------------------------------------------------
 LOC_REPO := localhost
-REM_REPO := ibmmq-docker.artifactory.dbgcloud.io/ibmmq-server/
+REM_REPO := ibmmq-docker.artifactory.dbgcloud.io/ibmmq-server
 
 # -----
 # Image name build by IBM Makefile
@@ -148,16 +155,50 @@ EXTRA_RPMS := "less openssl"
 #                                  R U L E S                                   #
 ################################################################################
 
+help:
+	@echo 
+	@echo "ibm-pre-img:"
+	@echo "    ibm-pre-dev: build ibm provided image development edtion"
+	@echo "    ibm-pre-prd: build ibm provided image production"
+	@echo 
+	@echo "img:"
+	@echo "    img-dev:"
+	@echo "    img-prd:"
+	@echo 
+	@echo "tag:"
+	@echo "    tag-dev "
+	@echo "    tag-prd "
+	@echo 
+
+# ------------------------------------------------------------------------------
+# build ibm images / prerequisits for images
+# ------------------------------------------------------------------------------
+ibm-pre-img: ibm-pre-dev ibm-pre-prd
+
+ibm-pre-dev:
+	@date "+%H:%M:%S start $@" >> .build.time
+	make -C mq-container/ build-devserver
+	@date "+%H:%M:%S ende  $@" >>  .build.time
+
+ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
+	@date "+%H:%M:%S start $@" >> .build.time
+	make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
+	@date "+%H:%M:%S ende  $@" >> .build.time
+
 # ------------------------------------------------------------------------------
 # build images
 # ------------------------------------------------------------------------------
-images: img-dev img-prd
+img: img-dev img-prd
 
 img-dev : Dockerfile 
+	@date "+%H:%M:%S start $@" >> .build.time
 	$(call build-mq,$<,$(EMP_DEV_IMG),$(EMP_DEV_TAG),$(BASE_DEV_IMG),$(BASE_DEV_TAG))
+	@date "+%H:%M:%S ende  $@" >>  .build.time
 
 img-prd : Dockerfile
+	@date "+%H:%M:%S start $@" >> .build.time
 	$(call build-mq,$<,$(EMP_PRD_IMG),$(EMP_PRD_TAG),$(BASE_PRD_IMG),$(BASE_PRD_TAG))
+	@date "+%H:%M:%S ende  $@" >>  .build.time
 
 # ------------------------------------------------------------------------------
 # tag images
@@ -165,10 +206,14 @@ img-prd : Dockerfile
 tag: tag-dev tag-prd
 
 tag-dev:
-	$(call tag-img,$(BASE_DEV_IMG),$(BASE_DEV_TAG),$(EMP_DEV_IMG):$(EMP_DEV_TAG))
+	@date "+%H:%M:%S start $@" >> .build.time
+	$(call tag-img,$(LOC_REPO)/$(DBAG_DEV_IMG),$(EMP_DEV_TAG),$(REM_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_TAG))
+	@date "+%H:%M:%S ende  $@" >> .build.time
 
 tag-prd:
-	$(call tag-img,$(BASE_PRD_IMG),$(BASE_PRD_TAG),$(EMP_PRD_IMG):$(EMP_PRD_TAG))
+	@date "+%H:%M:%S start $@" >> .build.time
+	$(call tag-img,$(LOC_REPO)/$(DBAG_PRD_IMG),$(EMP_PRD_TAG),$(REM_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_TAG))
+	@date "+%H:%M:%S ende  $@" >> .build.time
 
 # ------------------------------------------------------------------------------
 # deploy to artifactory
@@ -200,11 +245,3 @@ define show-attr
 endef	
 
 
-#	#$(DOCKER) login -u mu193 $(REPOSITORY) 
-#tag-dev:
-#	$$( $(DOCKER) images | \
-#		${AWK}  -v IMG="${BASE_DEV_IMG}"                 \
-#			-v TAG="${BASE_DEV_TAG}"                 \
-#			-v GOAL=" ${EMP_DEV_IMG}:${EMP_DEV_TAG}" \
-#			-v CMD="${DOCKER} tag "                  \
-#	 	'$$1~IMG && $$2~TAG {print CMD $$3 GOAL}' )
