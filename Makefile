@@ -95,6 +95,7 @@
 # ---------------------------------------------------------------------------- #
 #  History:                                                                    #
 #  28.06.24 ame Initial version                                                #
+#  09.07.24 ame deploy (goal) added                                            #
 #                                                                              #
 ################################################################################
 
@@ -218,10 +219,22 @@ tag-prd:
 # ------------------------------------------------------------------------------
 # deploy to artifactory
 # ------------------------------------------------------------------------------
-deploy:
+deploy: deploy-dev deploy-prd
+
+deploy-dev:
+	@date "+%H:%M:%S start $@" >> .build.time
+	$(DOCKER) login --get-login $(REM_REPO) && $(DOCKER) login $(REM_REPO)
+	$(DOCKER) push $(REM_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_TAG)
+	@date "+%H:%M:%S ende  $@" >> .build.time
+
+deploy-prd:
+	@date "+%H:%M:%S start $@" >> .build.time
+	$(DOCKER) login --get-login $(REM_REPO) && $(DOCKER) login $(REM_REPO)
+	$(DOCKER) push $(REM_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_TAG)
+	@date "+%H:%M:%S ende  $@" >> .build.time
 
 ################################################################################
-#                                  M A C R O S                                 # 
+#                                  M A C R O S                                 #
 ################################################################################
 define build-mq
 	$(BUILD)            \
