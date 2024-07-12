@@ -186,6 +186,9 @@ ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.
 	make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
+mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
+	/usr/bin/java -Dhttps.proxyHost=10.123.0.132 -Dhttps.proxyPort=3128 -jar bin/GetMQFix.jar -u ales.mertuek@deutsche-boerse.com -o $(dir $@) $(basename $(basename $(notdir $@))) 
+
 # ------------------------------------------------------------------------------
 # build images
 # ------------------------------------------------------------------------------
