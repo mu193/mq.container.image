@@ -93,6 +93,7 @@
 #  History:                                                                    #
 #  28.06.24 1.0.0 ame Initial version                                          #
 #  09.07.24 1.1.0 ame deploy (goal) added                                      #
+#  17.07.24 1.2.1 ame download with mqadmin, rename goals to ibm-*             #
 #                                                                              #
 ################################################################################
 
@@ -105,7 +106,7 @@
 # ------------------------------------------------------------------------------
 RELEASE := 0
 
-VER := 9.4.0.0
+VER := 9.3.5.1
 
 # ------------------------------------------------------------------------------
 # Commands
@@ -168,12 +169,12 @@ help:
 	@echo "    ibm-pre-prd: build ibm provided image production"
 	@echo 
 	@echo "ibm-img:"
-	@echo "    img-dev: build development dbag images based on runmqserver"
-	@echo "    img-prd: build development dbag images based on runmqserver"
+	@echo "    img-dev: build development dbag image based on runmqserver"
+	@echo "    img-prd: build production dbag image based on runmqserver"
 	@echo 
 	@echo "ibm-tag:"
-	@echo "    tag-dev "
-	@echo "    tag-prd "
+	@echo "    ibm-tag-dev: tag development dbag image based on runmqserver"
+	@echo "    ibm-tag-prd: tag production dbag image based on runmqserver"
 	@echo 
 
 # ------------------------------------------------------------------------------
@@ -215,14 +216,14 @@ ibm-img-prd : Dockerfile-ibm
 # ------------------------------------------------------------------------------
 # tag images
 # ------------------------------------------------------------------------------
-ibm-tag: tag-dev tag-prd
+ibm-tag: ibm-tag-dev ibm-tag-prd
 
 ibm-tag-dev:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call tag-img,$(LOC_REPO)/$(DBAG_DEV_IMG),$(EMP_DEV_TAG),$(REM_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-ibm-ibm-tag-prd:
+ibm-tag-prd:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call tag-img,$(LOC_REPO)/$(DBAG_PRD_IMG),$(EMP_PRD_TAG),$(REM_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
