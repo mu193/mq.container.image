@@ -61,22 +61,19 @@
 #        ibm-pre-dev: ibm prerequisit images for development                   #
 #        ibm-pre-prd: ibm prerequisit images for production                    #
 #                                                                              #
-#      img:     : build dbag images                                            #
-#        img-dev: build development image                                      #
-#        img-prd: build production image                                       #
+#      ibm-img:     : build dbag images                                        #
+#        ibm-img-dev: build development image                                  #
+#        ibm-img-prd: build production image                                   #
 #                                                                              #
-#      tag:                                                                    #
-#        tag-dev: tag dvelopment image for deployment / push                   #
-#        tag-prd: tag production image for deployment / push                   #
+#      ibm-tag:                                                                #
+#        ibm-tag-dev: tag dvelopment image for deployment / push               #
+#        ibm-tag-prd: tag production image for deployment / push               #
 #                                                                              #
-#      deploy:  deploy-dev deploy-prd                                          #
-#               all deploy goals include podman login                          #
+#      ibm-deploy   : ibm-deploy-dev ibm-deploy-prd                            #
+#                     all deploy goals include podman login                    #
 #                                                                              #
-#                                                                              #
-#                                                                              #
-#                                                                              #
-#      deploy-dev: deploy / push development image to artifactory              #
-#      deploy-prd: deploy / push production image to artifactory               #
+#      ibm-deploy-dev: deploy / push development image to artifactory          #
+#      ibm-deploy-prd: deploy / push production image to artifactory           #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -94,8 +91,8 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #  History:                                                                    #
-#  28.06.24 ame Initial version                                                #
-#  09.07.24 ame deploy (goal) added                                            #
+#  28.06.24 1.0.0 ame Initial version                                          #
+#  09.07.24 1.1.0 ame deploy (goal) added                                      #
 #                                                                              #
 ################################################################################
 
@@ -116,6 +113,14 @@ VER := 9.4.0.0
 DOCKER := podman
 BUILD := $(DOCKER) build
 AWK := awk
+CAT := /usr/bin/cat
+
+JAVA := /usr/bin/java 
+
+HTTP_PRX_IP:=$(subst /,,$(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$2}'))
+HTTP_PRX_PORT :=        $(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$3}')
+IBM_USER := mqadmin@deutsche-boerse.com 
+#IBM_USER := ales.mertuek@deutsche-boerse.com 
 
 # ------------------------------------------------------------------------------
 # artifactory
@@ -162,11 +167,11 @@ help:
 	@echo "    ibm-pre-dev: build ibm provided image development edtion"
 	@echo "    ibm-pre-prd: build ibm provided image production"
 	@echo 
-	@echo "img:"
-	@echo "    img-dev:"
-	@echo "    img-prd:"
+	@echo "ibm-img:"
+	@echo "    img-dev: build development dbag images based on runmqserver"
+	@echo "    img-prd: build development dbag images based on runmqserver"
 	@echo 
-	@echo "tag:"
+	@echo "ibm-tag:"
 	@echo "    tag-dev "
 	@echo "    tag-prd "
 	@echo 
@@ -187,19 +192,22 @@ ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
-	/usr/bin/java -Dhttps.proxyHost=10.123.0.132 -Dhttps.proxyPort=3128 -jar bin/GetMQFix.jar -u ales.mertuek@deutsche-boerse.com -o $(dir $@) $(basename $(basename $(notdir $@))) 
+	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP)             \
+		-Dhttps.proxyPort=$(HTTP_PRX_PORT)           \
+			-jar bin/GetMQFix.jar -u $(IBM_USER) \
+			-o $(dir $@) $(basename $(basename $(notdir $@))) 
 
 # ------------------------------------------------------------------------------
 # build images
 # ------------------------------------------------------------------------------
-img: img-dev img-prd
+ibm-img: ibm-img-dev ibm-img-prd
 
-img-dev : Dockerfile 
+ibm-img-dev : Dockerfile-ibm
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call build-mq,$<,$(EMP_DEV_IMG),$(EMP_DEV_TAG),$(BASE_DEV_IMG),$(BASE_DEV_TAG))
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
-img-prd : Dockerfile
+ibm-img-prd : Dockerfile-ibm
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call build-mq,$<,$(EMP_PRD_IMG),$(EMP_PRD_TAG),$(BASE_PRD_IMG),$(BASE_PRD_TAG))
 	@date "+%H:%M:%S ende  $@" >>  .build.time
@@ -207,14 +215,14 @@ img-prd : Dockerfile
 # ------------------------------------------------------------------------------
 # tag images
 # ------------------------------------------------------------------------------
-tag: tag-dev tag-prd
+ibm-tag: tag-dev tag-prd
 
-tag-dev:
+ibm-tag-dev:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call tag-img,$(LOC_REPO)/$(DBAG_DEV_IMG),$(EMP_DEV_TAG),$(REM_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-tag-prd:
+ibm-ibm-tag-prd:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call tag-img,$(LOC_REPO)/$(DBAG_PRD_IMG),$(EMP_PRD_TAG),$(REM_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
@@ -222,19 +230,24 @@ tag-prd:
 # ------------------------------------------------------------------------------
 # deploy to artifactory
 # ------------------------------------------------------------------------------
-deploy: deploy-dev deploy-prd
+ibm-deploy: deploy-dev deploy-prd
 
-deploy-dev:
+ibm-deploy-dev:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(DOCKER) login --get-login $(REM_REPO) && $(DOCKER) login $(REM_REPO)
 	$(DOCKER) push $(REM_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_TAG)
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-deploy-prd:
+ibm-deploy-prd:
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(DOCKER) login --get-login $(REM_REPO) && $(DOCKER) login $(REM_REPO)
 	$(DOCKER) push $(REM_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_TAG)
 	@date "+%H:%M:%S ende  $@" >> .build.time
+
+vara :
+	@echo $(HTTP_PRX_IP)
+	@echo $(HTTP_PRX_PORT)
+
 
 ################################################################################
 #                                  M A C R O S                                 #
