@@ -1,0 +1,303 @@
+################################################################################
+#                                                                              #
+#    B U I L D   M Q   I M A G E   -   D E V E L O P M E N T   E D I T I O N   #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+#  DOC: ibm settings                                                           #
+#                                                                              #
+#    MQ_OVERRIDE_DATA_PATH=/var/mqm/             # set data path to /var/mqm   #
+#    MQ_OVERRIDE_INSTALLATION_NAME=Installation1 #                             #
+#                                                                              #
+#    genmqpkg_inc32=0         # 32-bit application support                     #
+#    genmqpkg_incnls=0        # languages other than English                   #
+#    genmqpkg_inccpp=0        # C++ libraries                                  #
+#    genmqpkg_inccbl=0        # COBOL libraries                                #
+#    genmqpkg_incdnet=0       # .NET libraries                                 #
+#    genmqpkg_inctls=1        # SSL/TLS support                                #
+#    genmqpkg_incams=0        # AMS support                                    #
+#    genmqpkg_inccics=0       # CICS support                                   #
+#    genmqpkg_incadm=1        # administration tools                           #
+#    genmqpkg_incras=0        # RAS tools                                      #
+#    genmqpkg_incsamp=0       # sample applications                            #
+#    genmqpkg_incsdk=0        # SDK to compile applications                    #
+#    genmqpkg_incjre=0        # Java Runtime Environment (JRE)                 #
+#    genmqpkg_incamqp=0       # AMQP support                                   #
+#    genmqpkg_incman=0        # man pages                                      #
+#    genmqpkg_incmqft=0       # Managed File Transfer                          #
+#    genmqpkg_incmqsf=0       # Bridge to Salesforce                           #
+#    genmqpkg_incmqxr=0       # Telemetry (MQXR) support                       #
+#    genmqpkg_incweb=0        # MQ Console                                     #
+#    genmqpkg_incjava=0       # Java libraries                                 #
+#    genmqpkg_incserver=1     # Server                                         #
+#    genmqpkg_incunthrd       # unthreaded application support                 #
+#                                                                              #
+#    genmqpkg_incnothrd=0     # ??? no thread security ???                     #
+#    genmqpkg_incmqbc=0       # ??? block chain ???                            #
+#                                                                              #
+#    ibm/bin/genmqpkg.sh -b /opt/mqm                                           #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+#  DOC: this                                                                   #
+#    images:                                                                   #
+#      - tools                                                                 #
+#      - mq-install                                                            #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+#  ARGUMENTS:                                                                  #
+#    ARCHIVE                                                                   #
+#      zip file with no-install source.                                        #
+#        Download it from Fix Pack Central for production                      #
+#          https://www.ibm.com/support/fixcentral                              #
+#        Download it from Support Page for Development (bottom of the page)    #
+#          https://www.ibm.com/support/pages/downloading-ibm-mq-93-cd          #
+#    BASE_RUN_IMG                                                              #
+#      base image for the main build.                                          #
+#        This base image should be as small as possible                        #
+#    BASE_BUILD_IMG                                                            #
+#      base image for intermediate build                                       #
+#        This image can be as large as necessary                               #
+#    RPM                                                                       #
+#      additional rpms for the main build                                      #
+#        install only rpms that are secure and small. Dont install vi          #
+#                                                                              #
+################################################################################
+
+
+# ------------------------------------------------------------------------------
+# Arguments passed from Makefile
+# ------------------------------------------------------------------------------
+ARG ARCHIVE
+ARG BASE_RUN_IMG
+ARG BASE_BUILD_IMG
+ARG MQ_DATA_MOUNT
+ARG MQ_LOG_MOUNT
+ARG MQ_SYS_MOUNT
+ARG MQ_ETC_MOUNT
+ARG RPMS
+
+# ------------------------------------------------------------------------------
+# Default arguments that can be overloaded in the Makefile
+# ------------------------------------------------------------------------------
+ARG BUILD_RPMS="git make gcc"
+ARG MQM_USER_ID=1001
+
+################################################################################
+#  builder image                                                               #
+#      AS TOOLS                                                                #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+#  description:                                                                #
+#    build an image with tools needed for ibm mq container                     #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#  components:                                                                 #
+#    prerequisites:                                                            #
+#      - mq SDK                                                                #
+#    tools:                                                                    #
+#      - dockmq                                                                #
+#                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+################################################################################
+
+
+# ----------------------------------------------------------
+# set base image
+# ----------------------------------------------------------
+FROM ${BASE_BUILD_IMG} as tools
+
+# ----------------------------------------------------------
+# pass essential attributes from dockerfile
+# ----------------------------------------------------------
+ARG ARCHIVE
+ARG TOOLS_RPMS
+
+USER 0
+
+WORKDIR /var/data/build
+
+LABEL image="ibmmq"
+LABEL stage="tool"
+LABEL level="debug"
+
+# ----------------------------------------------------------
+# install only mq sdk
+# ----------------------------------------------------------
+ENV genmqpkg_incsdk=1    \
+    genmqpkg_inccpp=0    \   
+    genmqpkg_inc32=0     \
+    genmqpkg_incnls=0    \
+    genmqpkg_inccbl=0    \
+    genmqpkg_incdnet=0   \
+    genmqpkg_inctls=0    \
+    genmqpkg_incams=0    \
+    genmqpkg_inccics=0   \
+    genmqpkg_incadm=0    \
+    genmqpkg_incras=0    \
+    genmqpkg_incsamp=0   \
+    genmqpkg_incjre=0    \
+    genmqpkg_incamqp=0   \
+    genmqpkg_incman=0    \
+    genmqpkg_incmqft=0   \
+    genmqpkg_incmqsf=0   \
+    genmqpkg_incmqxr=0   \
+    genmqpkg_incweb=0    \
+    genmqpkg_incjava=0   \
+    genmqpkg_incserver=0 \
+    genmqpkg_incunthrd=0 \
+    genmqpkg_incnothrd=0 \
+    genmqpkg_incmqbc=0   \
+    MQ_OVERRIDE_DATA_PATH=/var/mqm/             \
+    MQ_OVERRIDE_INSTALLATION_NAME=Installation1 \
+    MQ_USER_NAME="mqm"     \
+    PATH="${PATH}:/opt/mqm/bin"
+
+# ----------------------------------------------------------
+# split RUN section in two for shorter build time
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# install development tools
+# ----------------------------------------------------------
+RUN  yum install -y ${BUILD_RPMS}    
+
+ADD files/id_rsa /root/.ssh/id_rsa
+ADD ${ARCHIVE} /var/data/build/ibmmq
+
+RUN chmod 600 /root/.ssh/id_rsa           ;                          \
+    ssh-keyscan github.deutsche-boerse.de > /root/.ssh/known_hosts ; \
+    ibmmq/bin/genmqpkg.sh -b /opt/mqm     ;                          \
+    git clone git@github.deutsche-boerse.de:dev/mq.dockmq dockmq   ; \
+    make -C dockmq debug      ;\
+    [ -d /etc/dbag/versions ] || mkdir -p /etc/dbag/versions       ; \
+    ( cd dockmq && git log -n 1 | head -1 ) > /etc/dbag/versions/dockmq
+
+################################################################################
+#                                                                              #
+#  builder image                                                               #
+#      AS MQ-INSTALL                                                           #
+#                                                                              #
+################################################################################
+
+# ----------------------------------------------------------
+# set base image
+# ----------------------------------------------------------
+FROM ${BASE_BUILD_IMG} as mq-install
+
+LABEL image="ibmmq"
+LABEL stage="install"
+LABEL level="debug"
+
+# ----------------------------------------------------------
+# pass essential attributes from dockerfile
+# ----------------------------------------------------------
+ARG ARCHIVE
+ARG BUILD_RPMS
+
+USER 0
+
+WORKDIR /var/data/build
+
+# ----------------------------------------------------------
+# install server, admin & ras
+# on dev only install also sdk
+# ----------------------------------------------------------
+ENV genmqpkg_incadm=1    \
+    genmqpkg_incserver=1 \
+    genmqpkg_inctls=1    \
+    genmqpkg_incras=1    \
+    genmqpkg_incsdk=1    \
+    genmqpkg_inccpp=0    \   
+    genmqpkg_inc32=0     \
+    genmqpkg_incnls=0    \
+    genmqpkg_inccbl=0    \
+    genmqpkg_incdnet=0   \
+    genmqpkg_incams=0    \
+    genmqpkg_inccics=0   \
+    genmqpkg_incsamp=0   \
+    genmqpkg_incjre=0    \
+    genmqpkg_incamqp=0   \
+    genmqpkg_incman=0    \
+    genmqpkg_incmqft=0   \
+    genmqpkg_incmqsf=0   \
+    genmqpkg_incmqxr=0   \
+    genmqpkg_incweb=0    \
+    genmqpkg_incjava=0   \
+    genmqpkg_incunthrd=0 \
+    genmqpkg_incnothrd=0 \
+    genmqpkg_incmqbc=0   \
+    MQ_OVERRIDE_DATA_PATH=${MQ_SYS_MOUNT}       \
+    MQ_OVERRIDE_INSTALLATION_NAME=Installation1 \
+    MQ_USER_NAME="mqm"     \
+    PATH="${PATH}:/opt/mqm/bin"
+
+# ----------------------------------------------------------
+# both  run sections could have been merged, but this would 
+# cause longer build times
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# install development tools
+# ----------------------------------------------------------
+RUN  yum install -y ${BUILD_RPMS}    
+
+ADD ${ARCHIVE} /var/data/build/ibmmq
+
+RUN ibmmq/bin/genmqpkg.sh -b /opt/mqm     
+
+################################################################################
+#                                                                              #
+#  MAIN image                                                                  #
+#                                                                              #
+################################################################################
+FROM ${BASE_RUN_IMG} as mq-advanced-dev      
+
+LABEL image="ibmmq"
+LABEL stage="main""
+LABEL level="debug"
+
+ARG MQM_USER_ID
+ARG MQ_SYS_MOUNT
+ARG MQ_DATA_MOUNT
+ARG MQ_LOG_MOUNT
+ARG MQ_ETC_MOUNT
+
+USER 0
+
+WORKDIR /home/mqm/
+
+EXPOSE 1414
+
+ENV MQ_OVERRIDE_DATA_PATH=${MQ_SYS_MOUNT}       \
+    MQ_OVERRIDE_INSTALLATION_NAME=Installation1 \
+    MQ_USER_NAME="mqm"                          \
+    PATH="${PATH}:/opt/mqm/bin"
+
+RUN microdnf --disableplugin=subscription-manager install \
+      gdb vi make gcc findutils 
+
+COPY --from=mq-install /opt/mqm /opt/mqm 
+COPY --from=tools /etc/dbag/versions/dockmq /etc/dbag/versions 
+COPY --from=tools /var/data/build/dockmq /opt/mqm/sbin 
+
+RUN chown -R ${MQM_USER_ID}:root /opt/mqm                        ;\
+    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root /home/mqm        ;\
+    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root ${MQ_SYS_MOUNT}  ;\
+    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root ${MQ_DATA_MOUNT} ;\
+    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root ${MQ_LOG_MOUNT}  ;\
+    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root ${MQ_ETC_MOUNT}/ini ;\
+    install --directory --mode 2775                                  \
+            --owner ${MQM_USER_ID} --group root ${MQ_ETC_MOUNT}/mqsc 
+
+USER ${MQM_USER_ID}
+
+ENTRYPOINT /opt/mqm/sbin/dockmq 
