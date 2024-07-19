@@ -337,7 +337,9 @@ dbag-img: dbag-img-dev dbag-img-prd
 # !!! 
 # be careful by adding depandencies: $^ takes them all
 
-dbag-img-dev: Dockerfile-dbag-dev, $(MQ_ARCHIVE_DEV)
+MQ_ARCHIVE_DEV := download/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-LinuxX64.tar.gz
+
+dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 	$(call build-mq-dbag,$<, $(MQ_ARCHIVE_DEV)                   ,\
 			$(EMP_DEV_IMG):$(EMP_DEV_DBAG_TAG)           ,\
 			$(OS_REPO)/$(BASE_OS_IMG):$(BASE_OS_TAG)     ,\
