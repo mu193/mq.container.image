@@ -80,7 +80,7 @@
 #      directory, the easiest way is by taking the image from IBM branch       #
 #                                                                              #
 #    Set Submodule for dockmq                                                  #
-#      git submoudle add https://github.deutsche-boerse.de/dev/mq.dockmq       #
+#      git submoudle add git@github.deutsche-boerse.de:dev/mq.dockmq           #
 #                                                                              #
 # -- -- -- -- -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- -- -- -- -- -- --  #
 #                                                                              #
@@ -114,6 +114,8 @@
 #                                                                              #
 #      ibm-deploy-dev: deploy / push development image to artifactory          #
 #      ibm-deploy-prd: deploy / push production image to artifactory           #
+#                                                                              #
+#      dbag-img-dev: build development image 
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -156,7 +158,6 @@ MQ_DATA_MOUNT := /mq/data
 MQ_LOG_MOUNT  := /mq/log
 MQ_SYS_MOUNT  := /var/mqm
 MQ_ETC_MOUNT  := /mq/etc
-
 
 # ------------------------------------------------------------------------------
 # Commands
@@ -217,6 +218,9 @@ EMP_PRD_DBAG_TAG := $(VER)-RD${RELEASE}-empty
 # static
 # ------------------------------------------------------------------------------
 EXTRA_RPMS := "less openssl"
+BUILD_RPMS := "git make gcc"
+MQM_USER_ID := 1001
+DOCKMQ_DIR := mq.dockmq
 
 ################################################################################
 #                                  R U L E S                                   #
@@ -226,14 +230,16 @@ EXTRA_RPMS := "less openssl"
 #   U T I L I T I E S  
 ################################################################################
 help:
+	@echo "----------------------------------------------------------------"
+	@echo "runmqserver based images maintaned by IBM"
 	@echo 
 	@echo "ibm-pre-img:"
-	@echo "    ibm-pre-dev: build ibm provided image development edtion"
-	@echo "    ibm-pre-prd: build ibm provided image production"
+	@echo "    ibm-pre-dev: build development edtion image"
+	@echo "    ibm-pre-prd: build production image"
 	@echo 
 	@echo "ibm-img:"
-	@echo "    ibm-img-dev: build development dbag image based on runmqserver"
-	@echo "    ibm-img-prd: build production dbag image based on runmqserver"
+	@echo "    ibm-img-dev: build dbag customized development image"
+	@echo "    ibm-img-prd: build dbag customized prodution image"
 	@echo 
 	@echo "ibm-tag:"
 	@echo "    ibm-tag-dev: tag development dbag image based on runmqserver"
@@ -242,6 +248,9 @@ help:
 	@echo "ibm-deploy:"
 	@echo "    ibm-deploy-dev: deploy development image to artifactory"
 	@echo "    ibm-deploy-prd: deploy development image to artifactory"
+	@echo 
+	@echo "dbag-img-dev: build development image "
+	@echo 
 
 vara :
 	@echo $(HTTP_PRX_IP)
@@ -328,6 +337,7 @@ ibm-deploy-prd:
 # build images
 # ------------------------------------------------------------------------------
 FORCE_OPT = 
+OPT = 
 
 dbag-img: dbag-img-dev dbag-img-prd
 
@@ -344,11 +354,14 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 			$(EMP_DEV_IMG):$(EMP_DEV_DBAG_TAG)           ,\
 			$(OS_REPO)/$(BASE_OS_IMG):$(BASE_OS_TAG)     ,\
 			$(OS_REPO)/$(BASE_TOOL_IMG):$(BASE_TOOL_TAG) ,\
-			$(MQ_SYS_MOUNT))      ,\
-			$(MQ_DATA_MOUNT)      ,\
-			$(MQ_LOG_MOUNT)      ,\
-			$(MQ_ETC_MOUNT)      ,\
-			$(EXTRA_RPMS)
+			$(MQ_SYS_MOUNT)                              ,\
+			$(MQ_DATA_MOUNT)                             ,\
+			$(MQ_LOG_MOUNT)                              ,\
+			$(MQ_ETC_MOUNT)                              ,\
+			$(EXTRA_RPMS)                                ,\
+			$(BUILD_RPMS)                                ,\
+			$(MQM_USER_ID)                               ,\
+			$(DOCKMQ_DIR)  )
 
 ################################################################################
 #                                  M A C R O S                                 #
@@ -379,7 +392,10 @@ define build-mq-dbag
 	    --build-arg MQ_DATA_MOUNT=$(strip $7)  \
 	    --build-arg MQ_LOG_MOUNT=$(strip $8)   \
 	    --build-arg MQ_ETC_MOUNT=$(strip $9)   \
-	    --build-arg RPMS=$(strip $10)
+	    --build-arg RPMS=$(strip $10)          \
+	    --build-arg BUILD_RPMS=$(strip $11)    \
+            --build-arg MQM_USER_ID=$(strip $12)   \
+	    --build-arg DOCKMQ_DIR=$(strip $13)
 endef
 
 # ------------------------------------------------------------------------------

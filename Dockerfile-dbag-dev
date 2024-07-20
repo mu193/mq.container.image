@@ -59,9 +59,30 @@
 #    BASE_BUILD_IMG                                                            #
 #      base image for intermediate build                                       #
 #        This image can be as large as necessary                               #
+#    MQ_DATA_MOUNT                                                             #
+#      Mount point for data file system including queues and qm.ini            #
+#    MQ_LOG_MOUNT                                                              #
+#      Mount point for log file system including transactional logs            #
+#    MQ_SYS_MOUNT                                                              #
+#      Mount point for mq system including mqs.ini                #
+#    MQ_ETC_MOUNT                                                          #
+#      This is not a real mount point. It includes following directories:      #
+#        - $(MQ_ETC_MOUNT)/ini                                                 #
+#            in qm.ini used for: AutoConfig.IniConfig               #
+#        - $(MQ_ETC_MOUNT)/mqsc                                                #
+#            in qm.ini used for: AutoConfig.MQSCConfig              #
+#        - $(MQ_ETC_MOUNT)/ssl                                          #
+#            this where SSL is maped by k8s                      #
+#            attention, this not where gsk repo is stored            #
 #    RPM                                                                       #
-#      additional rpms for the main build                                      #
+#      additional rpms for the runtime image                                   #
 #        install only rpms that are secure and small. Dont install vi          #
+#    BUILD_RPM                                                    #
+#      additional rpms needed during build phase only.                     #
+#      Any rpm can be installed, size doesn't metter.                 #
+#      Don't install them on the runtime image, only on temporarary stages     #
+#    MQM_USER_ID                                        #
+#      An image must not run as root.            #
 #                                                                              #
 ################################################################################
 
@@ -77,12 +98,9 @@ ARG MQ_LOG_MOUNT
 ARG MQ_SYS_MOUNT
 ARG MQ_ETC_MOUNT
 ARG RPMS
-
-# ------------------------------------------------------------------------------
-# Default arguments that can be overloaded in the Makefile
-# ------------------------------------------------------------------------------
-ARG BUILD_RPMS="git make gcc"
-ARG MQM_USER_ID=1001
+ARG BUILD_RPMS
+ARG MQM_USER_ID
+ARG DOCKMQ_DIR
 
 ################################################################################
 #  builder image                                                               #
@@ -114,7 +132,7 @@ FROM ${BASE_BUILD_IMG} as tools
 # pass essential attributes from dockerfile
 # ----------------------------------------------------------
 ARG ARCHIVE
-ARG TOOLS_RPMS
+ARG BUILD_RPMS
 
 USER 0
 
@@ -123,6 +141,7 @@ WORKDIR /var/data/build
 LABEL image="ibmmq"
 LABEL stage="tool"
 LABEL level="debug"
+LABEL form="dev"
 
 # ----------------------------------------------------------
 # install only mq sdk
@@ -163,16 +182,16 @@ ENV genmqpkg_incsdk=1    \
 # ----------------------------------------------------------
 # install development tools
 # ----------------------------------------------------------
-RUN  yum install -y ${BUILD_RPMS}    
+RUN  echo "--------------------------------------------" ;\
+     echo ">${BUILD_RPMS}<" ;\
+     echo "--------------------------------------------" ;\
+     yum install -y ${BUILD_RPMS}    
 
-ADD files/id_rsa /root/.ssh/id_rsa
+ADD ${DOCKMQ_DIR}/var/data/build/dockmq
 ADD ${ARCHIVE} /var/data/build/ibmmq
 
-RUN chmod 600 /root/.ssh/id_rsa           ;                          \
-    ssh-keyscan github.deutsche-boerse.de > /root/.ssh/known_hosts ; \
-    ibmmq/bin/genmqpkg.sh -b /opt/mqm     ;                          \
-    git clone git@github.deutsche-boerse.de:dev/mq.dockmq dockmq   ; \
-    make -C dockmq debug      ;\
+RUN ibmmq/bin/genmqpkg.sh -b /opt/mqm   ; \
+    make -C dockmq debug                ; \
     [ -d /etc/dbag/versions ] || mkdir -p /etc/dbag/versions       ; \
     ( cd dockmq && git log -n 1 | head -1 ) > /etc/dbag/versions/dockmq
 
@@ -191,6 +210,7 @@ FROM ${BASE_BUILD_IMG} as mq-install
 LABEL image="ibmmq"
 LABEL stage="install"
 LABEL level="debug"
+LABEL form="dev"
 
 # ----------------------------------------------------------
 # pass essential attributes from dockerfile
@@ -257,8 +277,9 @@ RUN ibmmq/bin/genmqpkg.sh -b /opt/mqm
 FROM ${BASE_RUN_IMG} as mq-advanced-dev      
 
 LABEL image="ibmmq"
-LABEL stage="main""
+LABEL stage="run"
 LABEL level="debug"
+LABEL form="dev"
 
 ARG MQM_USER_ID
 ARG MQ_SYS_MOUNT
@@ -292,8 +313,8 @@ RUN chown -R ${MQM_USER_ID}:root /opt/mqm                        ;\
     install --directory --mode 2775                               \
             --owner ${MQM_USER_ID} --group root ${MQ_DATA_MOUNT} ;\
     install --directory --mode 2775                               \
-            --owner ${MQM_USER_ID} --group root ${MQ_LOG_MOUNT}  ;\
-    install --directory --mode 2775                               \
+            --owner ${MQM_USER_ID} --group root ${MQ_LOG_MOUNT}     ;\
+    install --directory --mode 2775                                  \
             --owner ${MQM_USER_ID} --group root ${MQ_ETC_MOUNT}/ini ;\
     install --directory --mode 2775                                  \
             --owner ${MQM_USER_ID} --group root ${MQ_ETC_MOUNT}/mqsc 
