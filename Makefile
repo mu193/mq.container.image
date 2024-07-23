@@ -17,11 +17,12 @@
 #        defined by Dockerfile-dbag-dev & Dockecfile-dbag-prd                  #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
+#                                                                              #
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #                                I   B   M                                     #
 #                                                                              #
-# -- -- -- -- -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- -- -- -- -- -- --  #
+# ---------------------------------------------------------------------------- #
 #                                                                              #
 #  IBM image Prerequisites:                                                    #
 #                                                                              #
@@ -45,7 +46,7 @@
 #        IBM_MQ_9.3.5_LINUX_X86-64_NOINST.tar.gz doesn't exist                 #
 #      * make builds  localhost/ibm-mqadvanced-server                          #
 #                                                                              #
-# -- -- -- -- -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- -- -- -- -- -- --  #
+# ---------------------------------------------------------------------------- #
 #                                                                              #
 #  IBM image description:                                                      #
 #                                                                              #
@@ -67,11 +68,12 @@
 #     + create /.editrc                                                        #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
+#                                                                              #
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 #                                D   B   A   G                                 #
 #                                                                              #
-# -- -- -- -- -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- -- -- -- -- -- --  #
+# ---------------------------------------------------------------------------- #
 #                                                                              #
 #  DBAG image Prerequisites:                                                   #
 #                                                                              #
@@ -82,12 +84,12 @@
 #    Set Submodule for dockmq                                                  #
 #      git submoudle add git@github.deutsche-boerse.de:dev/mq.dockmq           #
 #                                                                              #
-# -- -- -- -- -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- -- -- -- -- -- --  #
+# ---------------------------------------------------------------------------- #
 #                                                                              #
 #  DBAG image description:                                                     #
-#    Base Image defined by                                         #
-#      recommeded is some ubi-minimal image                           #
-#      $(OS_REPO)/$(BASE_OS_IMG):$(BASE_OS_TAG)                       #
+#    Base Image defined by                                                     #
+#      recommeded is some ubi-minimal image                                    #
+#      $(OS_REPO)/$(BASE_OS_IMG):$(BASE_OS_TAG)                                #
 #    Image is build in STAGES.                                                 #
 #      The tools and mq-install stages base on some ubi8 image                 #
 #                                                                              #
@@ -230,8 +232,10 @@ DOCKMQ_DIR := mq.dockmq
 #   U T I L I T I E S  
 ################################################################################
 help:
-	@echo "----------------------------------------------------------------"
-	@echo "runmqserver based images maintaned by IBM"
+	@echo 
+	@echo "| ------------------------------------------------------------ |"
+	@echo "| runmqserver based images maintaned by IBM                    |"
+	@echo "| ------------------------------------------------------------ |"
 	@echo 
 	@echo "ibm-pre-img:"
 	@echo "    ibm-pre-dev: build development edtion image"
@@ -249,7 +253,17 @@ help:
 	@echo "    ibm-deploy-dev: deploy development image to artifactory"
 	@echo "    ibm-deploy-prd: deploy development image to artifactory"
 	@echo 
+	@echo "| ------------------------------------------------------------ |"
+	@echo "| dockmq based images maintaned by DBAG                        |"
+	@echo "| ------------------------------------------------------------ |"
 	@echo "dbag-img-dev: build development image "
+	@echo 
+	@echo "dbag-img-dev-force: force build development image "
+	@echo 
+	@echo "| ------------------------------------------------------------ |"
+	@echo "| force commands ignore existing cache,                        |"
+	@echo "|       it rebuilds all layers of an image                     |"
+	@echo "| ------------------------------------------------------------ |"
 	@echo 
 
 vara :
@@ -330,16 +344,37 @@ ibm-deploy-prd:
 
 ################################################################################
 #   D O C K M Q   B A S E D   I M A G E S  
-# involve mq-dock
 ################################################################################
+
+# ------------------------------------------------------------------------------
+# build rules
+# ------------------------------------------------------------------------------
+
+dbag-img: dbag-img-dev dbag-img-prd
+
+# ------------------------------------------------------------------------------
+# force build rules
+# ------------------------------------------------------------------------------
+OPT   = 
+FORCE = --no-cache
+
+dbag-img-force:     OPT += $(FORCE)
+
+dbag-img-prd-force: OPT += $(FORCE)
+
+dbag-img-dev-force: OPT += $(FORCE)
+
+
+dbag-img-force:     dbag-img
+
+dbag-img-dev-force: dbag-img-dev 
+
+dbag-img-prd-force: dbag-img-prd
 
 # ------------------------------------------------------------------------------
 # build images
 # ------------------------------------------------------------------------------
-FORCE_OPT = 
-OPT = 
-
-dbag-img: dbag-img-dev dbag-img-prd
+download/%.tar.gz: mq-container/download/%.tar.gz
 
 # ???
 # MQ_ARCHIVE_DEV is a zip file containing the devel edtion non-install image
@@ -382,20 +417,20 @@ endef
 # build DBAG, dockmq base image
 # ------------------------------------------------------------------------------
 define build-mq-dbag
-	$(BUILD) build $(OPT)                      \
-	    --file $1                              \
-	    --tag  $3                              \
-	    --build-arg ARCHIVE=$(strip $2)        \
-	    --build-arg BASE_RUN_IMG=$(strip $4)   \
-	    --build-arg BASE_BUILD_IMG=$(strip $5) \
-	    --build-arg MQ_SYS_MOUNT=$(strip $6)   \
-	    --build-arg MQ_DATA_MOUNT=$(strip $7)  \
-	    --build-arg MQ_LOG_MOUNT=$(strip $8)   \
-	    --build-arg MQ_ETC_MOUNT=$(strip $9)   \
-	    --build-arg RPMS=$(strip $10)          \
-	    --build-arg BUILD_RPMS=$(strip $11)    \
-            --build-arg MQM_USER_ID=$(strip $12)   \
-	    --build-arg DOCKMQ_DIR=$(strip $13)
+	$(BUILD) build $(OPT)                        \
+	    --file $(1)                              \
+	    --tag  $(3)                              \
+	    --build-arg ARCHIVE=$(strip $(2))        \
+	    --build-arg BASE_RUN_IMG=$(strip $(4))   \
+	    --build-arg BASE_BUILD_IMG=$(strip $(5)) \
+	    --build-arg MQ_SYS_MOUNT=$(strip $(6))   \
+	    --build-arg MQ_DATA_MOUNT=$(strip $(7))  \
+	    --build-arg MQ_LOG_MOUNT=$(strip $(8))   \
+	    --build-arg MQ_ETC_MOUNT=$(strip $(9))   \
+	    --build-arg RPMS=$(strip $(10))          \
+	    --build-arg BUILD_RPMS=$(strip $(11))    \
+            --build-arg MQM_USER_ID=$(strip $(12))   \
+	    --build-arg DOCKMQ_DIR=$(strip $(13))
 endef
 
 # ------------------------------------------------------------------------------
