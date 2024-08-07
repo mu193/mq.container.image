@@ -195,17 +195,6 @@ RUN  echo "" ;\
      echo "" ;\
      yum install -y ${BUILD_RPMS}    
 
-
-RUN  echo "" ;\
-     echo "| -------------------------------------------------------------" ;\
-     echo "| ARCHIVE    = ${ARCHIVE} " ;\
-     echo "| REPORUL = ${REPOURL} ;\
-     echo "| LOCAL_REPO_CONFIG = ${LOCAL_REPO_CONFIG} ;\
-     echo "| -------------------------------------------------------------" ;\
-     mkdir   ibmmq ;\
-     echo "" 
-
-COPY ./download/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-LinuxX64.tar.gz /var/data/build/ibmmq/
 ADD ${ARCHIVE}     /var/data/build/ibmmq/
 ADD ${DOCKMQ_DIR}/ /var/data/build/dockmq/
 

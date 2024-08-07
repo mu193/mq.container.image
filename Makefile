@@ -168,6 +168,7 @@ DOCKER := podman
 BUILD := $(DOCKER) build
 AWK := awk
 CAT := /usr/bin/cat
+CP := /usr/bin/cp
 
 JAVA := /usr/bin/java 
 
@@ -210,7 +211,7 @@ DBAG_PRD_IMG = ibmmq-prd
 
 EMP_DEV_IMG      := $(LOC_REPO)/$(DBAG_DEV_IMG)
 EMP_DEV_IBM_TAG  := $(VER)-ri${RELEASE}-empty
-EMP_DEV_DBAG_TAG := $(VER)-RD{RELEASE}-empty
+EMP_DEV_DBAG_TAG := $(VER)-RD${RELEASE}-empty
 
 EMP_PRD_IMG      := $(LOC_REPO)/$(DBAG_PRD_IMG)
 EMP_PRD_IBM_TAG  := $(VER)-ri${RELEASE}-empty
@@ -290,9 +291,10 @@ ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
-	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP)   \
+	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
 			-Dhttps.proxyPort=$(HTTP_PRX_PORT)           \
-			-jar bin/GetMQFix.jar -u $(IBM_USER) \
+			-jar bin/GetMQFix.jar -u $(IBM_USER)         \
+			-x                                           \
 			-o $(dir $@) $(basename $(basename $(notdir $@))) 
 
 # ------------------------------------------------------------------------------
@@ -374,7 +376,10 @@ dbag-img-prd-force: dbag-img-prd
 # ------------------------------------------------------------------------------
 # build images
 # ------------------------------------------------------------------------------
-download/%.tar.gz: mq-container/download/%.tar.gz
+MQ_ARCHIVE_DEV := downloads/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-LinuxX64.tar.gz
+
+$(MQ_ARCHIVE_DEV): mq-container/$(MQ_ARCHIVE_DEV)
+	$(CP) $< $@
 
 # ???
 # MQ_ARCHIVE_DEV is a zip file containing the devel edtion non-install image
@@ -382,7 +387,6 @@ download/%.tar.gz: mq-container/download/%.tar.gz
 # !!! 
 # be careful by adding depandencies: $^ takes them all
 
-MQ_ARCHIVE_DEV := download/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-LinuxX64.tar.gz
 
 dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 	$(call build-mq-dbag,$<, $(MQ_ARCHIVE_DEV)                   ,\
@@ -417,7 +421,7 @@ endef
 # build DBAG, dockmq base image
 # ------------------------------------------------------------------------------
 define build-mq-dbag
-	$(BUILD) build $(OPT)                        \
+	$(BUILD) $(OPT)                              \
 	    --file $(1)                              \
 	    --tag  $(3)                              \
 	    --build-arg ARCHIVE=$(strip $(2))        \
