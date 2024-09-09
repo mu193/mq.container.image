@@ -138,7 +138,7 @@
 #  28.06.24 1.0.0 ame Initial version                                          #
 #  09.07.24 1.1.0 ame deploy (goal) added                                      #
 #  17.07.24 1.2.1 ame download with mqadmin, rename goals to ibm-*             #
-#  18.07.24 2.0.0 ame integrate dockmq based images      #
+#  18.07.24 2.0.0 ame integrate dockmq based images                            #
 #                                                                              #
 ################################################################################
 
@@ -149,7 +149,7 @@
 # ------------------------------------------------------------------------------
 # Dynamic variables
 # ------------------------------------------------------------------------------
-RELEASE := 0
+RELEASE := 1
 
 VER := 9.3.5.1
 
@@ -168,9 +168,16 @@ DOCKER := podman
 BUILD := $(DOCKER) build
 AWK := awk
 CAT := /usr/bin/cat
-CP := /usr/bin/cp
+CP  := /usr/bin/cp
+ZIP := /usr/bin/tar cfz
+MKDIR := /usr/bin/mkdir -p
+
 
 JAVA := /usr/bin/java 
+
+ifndef $(shell echo $(HTTP_PROXY))
+$(eror environment HTTP_PROXY not set)
+endif
 
 HTTP_PRX_IP:=$(subst /,,$(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$2}'))
 HTTP_PRX_PORT :=        $(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$3}')
@@ -285,10 +292,15 @@ ibm-pre-dev:
 	make -C mq-container/ build-devserver
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
+# IMAGE_REVISION=$(shell git rev-parse HEAD) "41981f659c66fead6ca8b58015dc18d4af31c70b"
+# IMAGE_SOURCE=$(shell git config --get remote.origin.url) "https://github.com/ibm-messaging/mq-container" -
+
 ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
 	make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
 	@date "+%H:%M:%S ende  $@" >> .build.time
+
+	$(call build-mq-ibm-raw)
 
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
@@ -302,14 +314,14 @@ mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz:
 # ------------------------------------------------------------------------------
 ibm-img: ibm-img-dev ibm-img-prd
 
-ibm-img-dev : Dockerfile-ibm
+ibm-img-dev : Dockerfile-ibm files/ibm-img.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call build-mq-ibm,$<,$(EMP_DEV_IMG),$(EMP_DEV_IBM_TAG),$(LOC_REPO)/$(IBM_DEV_IMG),$(IBM_DEV_TAG))
+	$(call build-mq-ibm,$<,$(EMP_DEV_IMG),$(EMP_DEV_IBM_TAG),$(LOC_REPO)/$(IBM_DEV_IMG),$(IBM_DEV_TAG),files/ibm-img.tar.gz)
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
-ibm-img-prd : Dockerfile-ibm
+ibm-img-prd : Dockerfile-ibm files/ibm-img.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call build-mq-ibm,$<,$(EMP_PRD_IMG),$(EMP_PRD_IBM_TAG),$(LOC_REPO)/$(IBM_PRD_IMG),$(IBM_PRD_TAG))
+	$(call build-mq-ibm,$<,$(EMP_PRD_IMG),$(EMP_PRD_IBM_TAG),$(LOC_REPO)/$(IBM_PRD_IMG),$(IBM_PRD_TAG),files/ibm-img.tar.gz)
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
 # ------------------------------------------------------------------------------
@@ -381,6 +393,10 @@ MQ_ARCHIVE_DEV := downloads/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-L
 $(MQ_ARCHIVE_DEV): mq-container/$(MQ_ARCHIVE_DEV)
 	$(CP) $< $@
 
+files/ibm-img.tar.gz: mq.system/dlh.ksh mq.system/editrc
+	[[ -d $(dir $@) ]] || $(MKDIR) $(dir $@)
+	$(ZIP) $@ $^
+
 # ???
 # MQ_ARCHIVE_DEV is a zip file containing the devel edtion non-install image
 
@@ -407,14 +423,28 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 ################################################################################
 
 # ------------------------------------------------------------------------------
+# build IBM, runmqserver based RAW image
+#   take base image(s), add runmqserver & MQ
+# podman build --tag ibm-mqadvanced-server:9.3.5.1-amd64 --file Dockerfile-server 
+#     --build-arg IMAGE_REVISION="41981f659c66fead6ca8b58015dc18d4af31c70b" 
+#      --build-arg IMAGE_SOURCE="https://github.com/ibm-messaging/mq-container" --build-arg IMAGE_TAG="ibm-mqadvanced-server:9.3.5.1-amd64" --build-arg MQ_ARCHIVE="downloads/IBM_MQ_9.3.5_LINUX_X86-64_NOINST.tar.gz" --label version=9.3.5.1 --label name=ibm-mqadvanced-server --label build-date=2024-09-05T14:32:51+0000 --label architecture="amd64" --label run="podman run -d -e LICENSE=accept ibm-mqadvanced-server:9.3.5.1-amd64" --label vcs-ref=41981f659c66fead6ca8b58015dc18d4af31c70b --label vcs-type=git --label vcs-url=https://github.com/ibm-messaging/mq-container    --target mq-server .
+#
+# ------------------------------------------------------------------------------
+define build-mq-ibm-raw
+	podman build --tag ibm-mqadvanced-server:9.3.5.1-amd64 --file mq-container/Dockerfile-server --build-arg IMAGE_REVISION="41981f659c66fead6ca8b58015dc18d4af31c70b" --build-arg IMAGE_SOURCE="https://github.com/ibm-messaging/mq-container" --build-arg IMAGE_TAG="ibm-mqadvanced-server:9.3.5.1-amd64" --build-arg MQ_ARCHIVE="mq-container/downloads/9.3.5.1-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz" --label version=9.3.5.1 --label name=ibm-mqadvanced-server --label build-date=2024-09-09T14:24:03+0000 --label architecture="amd64" --label run="podman run -d -e LICENSE=accept ibm-mqadvanced-server:9.3.5.1-amd64" --label vcs-ref=41981f659c66fead6ca8b58015dc18d4af31c70b --label vcs-type=git --label vcs-url=https://github.com/ibm-messaging/mq-container    --target mq-server .
+endef
+
+# ------------------------------------------------------------------------------
 # build IBM, runmqserver based image
+#   take ibmmq raw image, raname it and add dbag tools
 # ------------------------------------------------------------------------------
 define build-mq-ibm
 	$(BUILD)            \
 	    --file $1       \
 	    --tag $2:$3     \
 	    --build-arg BASE_MQ_IMG=$4:$5  \
-	    --build-arg RPMS=$(EXTRA_RPMS)
+	    --build-arg RPMS=$(EXTRA_RPMS) \
+	    --build-arg FILES=${6}
 endef
 
 # ------------------------------------------------------------------------------
