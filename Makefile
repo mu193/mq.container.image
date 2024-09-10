@@ -297,10 +297,10 @@ ibm-pre-dev:
 
 ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	make -C $(dir $(patsubst %/,%,$(dir $^))) build-advancedserver MQ_ARCHIVE=$(notdir $(notdir $^))
+	podman build --tag ibm-mqadvanced-server:9.3.5.1-amd64 --file mq-container/Dockerfile-server --build-arg IMAGE_REVISION="41981f659c66fead6ca8b58015dc18d4af31c70b" --build-arg IMAGE_SOURCE="https://github.com/ibm-messaging/mq-container" --build-arg IMAGE_TAG="ibm-mqadvanced-server:9.3.5.1-amd64" --build-arg MQ_ARCHIVE="downloads/9.3.5.1-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz" --label version=9.3.5.1 --label name=ibm-mqadvanced-server --label build-date=2024-09-10T10:30:30+0000 --label architecture="amd64" --label run="podman run -d -e LICENSE=accept ibm-mqadvanced-server:9.3.5.1-amd64" --label vcs-ref=41981f659c66fead6ca8b58015dc18d4af31c70b --label vcs-type=git --label vcs-url=https://github.com/ibm-messaging/mq-container    --target mq-server mq-container/
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-	$(call build-mq-ibm-raw)
+#$(call build-mq-ibm-raw)
 
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
