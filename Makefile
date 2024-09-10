@@ -297,10 +297,12 @@ ibm-pre-dev:
 
 ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
+	make -C $(dir $(patsubst %/,%,$(dir $^))) build-advancedserver MQ_ARCHIVE=$(notdir $(notdir $^)) 
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-	$(call build-mq-ibm-raw)
+#$(call build-mq-ibm-raw)
+#make -C mq-container/ build-advancedserver  MQ_ARCHIVE=9.4.0.5-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz	
+#echo make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
 
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
