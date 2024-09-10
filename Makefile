@@ -297,7 +297,7 @@ ibm-pre-dev:
 
 ibm-pre-prd: mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	make -C $(dir $(patsubst %/,%,$(dir $^))) MQ_ARCHIVE=$(notdir $(notdir $^)) build-advancedserver
+	make -C $(dir $(patsubst %/,%,$(dir $^))) build-advancedserver MQ_ARCHIVE=$(notdir $(notdir $^))
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 	$(call build-mq-ibm-raw)
