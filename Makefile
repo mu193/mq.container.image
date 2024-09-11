@@ -123,6 +123,7 @@
 #                                                                              #
 #  Variables:                                                                  #
 #    this list includes only variables that will be changed on regular basis   #
+#    they are stored in mk.inc/versions.mk
 #                                                                              #
 #    VER : MQ Version in FORM V.M.S.F                                          #
 #                                                                              #
@@ -139,8 +140,15 @@
 #  09.07.24 1.1.0 ame deploy (goal) added                                      #
 #  17.07.24 1.2.1 ame download with mqadmin, rename goals to ibm-*             #
 #  18.07.24 2.0.0 ame integrate dockmq based images                            #
+#  11.09.24 3.0.0 ame - make -C mq-container replace by                        #
+#                       mq-container/Dockerfile in build-mq-ibm-raw            #
 #                                                                              #
 ################################################################################
+
+################################################################################
+#                               I N C L U D E S                                #
+################################################################################
+include mk.inc/version.mk
 
 ################################################################################
 #                              V A R I A B L E S                               #
@@ -154,10 +162,6 @@ comma:=","
 # ------------------------------------------------------------------------------
 # Dynamic variables
 # ------------------------------------------------------------------------------
-RELEASE := 0
-
-VER := 9.4.0.5
-
 ARCH := amd64
 
 # ------------------------------------------------------------------------------
