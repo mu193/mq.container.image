@@ -203,7 +203,6 @@ IBM_USER := mqadmin@deutsche-boerse.com
 # ------------------------------------------------------------------------------
 # artifactory
 # ------------------------------------------------------------------------------
-LOC_REPO := localhost
 REM_REPO := ibmmq-docker.artifactory.dbgcloud.io
 MQ_REPO  := $(REM_REPO)/ibmmq-server
 OS_REPO  := $(REM_REPO)/ubi8
@@ -231,11 +230,11 @@ BUILDER_TAG := 8.9
 DBAG_DEV_IMG = ibmmq-dev
 DBAG_PRD_IMG = ibmmq-prd
 
-EMP_DEV_IMG      := $(LOC_REPO)/$(DBAG_DEV_IMG)
+EMP_DEV_IMG      := $(LOC_ARTFCT)/$(DBAG_DEV_IMG)
 EMP_DEV_IBM_TAG  := $(VER)-ri${RELEASE}-empty
 EMP_DEV_DBAG_TAG := $(VER)-RD${RELEASE}-empty
 
-EMP_PRD_IMG      := $(LOC_REPO)/$(DBAG_PRD_IMG)
+EMP_PRD_IMG      := $(LOC_ARTFCT)/$(DBAG_PRD_IMG)
 EMP_PRD_IBM_TAG  := $(VER)-ri${RELEASE}-empty
 EMP_PRD_DBAG_TAG := $(VER)-RD${RELEASE}-empty
 
@@ -338,12 +337,12 @@ ibm-img: ibm-img-dev ibm-img-prd
 
 ibm-img-dev : Dockerfile-ibm files/ibm-img.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call build-mq-ibm,$<,$(EMP_DEV_IMG),$(EMP_DEV_IBM_TAG),$(LOC_REPO)/$(IBM_DEV_IMG),$(IBM_DEV_TAG),files/ibm-img.tar.gz)
+	$(call build-mq-ibm,$<,$(EMP_DEV_IMG),$(EMP_DEV_IBM_TAG),$(LOC_ARTFCT)/$(IBM_DEV_IMG),$(IBM_DEV_TAG),files/ibm-img.tar.gz)
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
 ibm-img-prd : Dockerfile-ibm files/ibm-img.tar.gz
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call build-mq-ibm,$<,$(EMP_PRD_IMG),$(EMP_PRD_IBM_TAG),$(LOC_REPO)/$(IBM_PRD_IMG),$(IBM_PRD_TAG),files/ibm-img.tar.gz)
+	$(call build-mq-ibm,$<,$(EMP_PRD_IMG),$(EMP_PRD_IBM_TAG),$(LOC_ARTFCT)/$(IBM_PRD_IMG),$(IBM_PRD_TAG),files/ibm-img.tar.gz)
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
 # ------------------------------------------------------------------------------
@@ -353,12 +352,12 @@ ibm-tag: ibm-tag-dev ibm-tag-prd
 
 ibm-tag-dev:
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call tag-img,$(LOC_REPO)/$(DBAG_DEV_IMG),$(EMP_DEV_IBM_TAG),$(MQ_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_IBM_TAG))
+	$(call tag-img,$(LOC_ARTFCT)/$(DBAG_DEV_IMG),$(EMP_DEV_IBM_TAG),$(MQ_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_IBM_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 ibm-tag-prd:
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call tag-img,$(LOC_REPO)/$(DBAG_PRD_IMG),$(EMP_PRD_IBM_TAG),$(MQ_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_IBM_TAG))
+	$(call tag-img,$(LOC_ARTFCT)/$(DBAG_PRD_IMG),$(EMP_PRD_IBM_TAG),$(MQ_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_IBM_TAG))
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 # ------------------------------------------------------------------------------
