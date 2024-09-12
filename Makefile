@@ -142,6 +142,7 @@
 #  18.07.24 2.0.0 ame integrate dockmq based images                            #
 #  11.09.24 3.0.0 ame - make -C mq-container replace by                        #
 #                       mq-container/Dockerfile in build-mq-ibm-raw            #
+#                     - move definition of variables to mk.inc/*.mk
 #                                                                              #
 ################################################################################
 
@@ -149,6 +150,7 @@
 #                               I N C L U D E S                                #
 ################################################################################
 include mk.inc/version.mk
+include mk.inc/artifactory.mk
 
 ################################################################################
 #                              V A R I A B L E S                               #
@@ -159,6 +161,7 @@ include mk.inc/version.mk
 # ------------------------------------------------------------------------------
 space:=$(subts ,, )
 comma:=","
+
 # ------------------------------------------------------------------------------
 # Dynamic variables
 # ------------------------------------------------------------------------------
@@ -189,10 +192,9 @@ ZIP := /usr/bin/tar cfz
 MKDIR := /usr/bin/mkdir -p
 JAVA := /usr/bin/java 
 
-# not working
-ifndef $(shell echo $(HTTP_PROXY))
-$(eror environment HTTP_PROXY not set)
-endif
+#ifndef  HTTP_PROXY
+#  $(error HTTP_PROXY not set )
+#endif
 
 HTTP_PRX_IP:=$(subst /,,$(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$2}'))
 HTTP_PRX_PORT :=        $(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$3}')
@@ -220,8 +222,8 @@ IBM_PRD_TAG := $(VER)-$(ARCH)
 # -----
 BASE_OS_IMG   := ubi-minimal
 BASE_OS_TAG   := 8.9
-BASE_TOOL_IMG := ubi
-BASE_TOOL_TAG := 8.9
+BUILDER_IMG := ubi
+BUILDER_TAG := 8.9
 
 # -----
 # Image name build by this Makefile
@@ -305,26 +307,29 @@ ibm-pre-dev:
 	make -C $(IBM_BASE_REPO)/ build-devserver
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
-# IMAGE_REVISION=$(shell git rev-parse HEAD) "41981f659c66fead6ca8b58015dc18d4af31c70b"
-# IMAGE_SOURCE=$(shell git config --get remote.origin.url) "https://github.com/ibm-messaging/mq-container" -
-
 ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz Dockerfile-server)
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(call build-mq-ibm-raw, mq-container/Dockerfile-server, \
-				$<,                 \
-				$(IBM_PRD_IMG):$(IBM_PRD_TAG),   \
-				$(shell git --git-dir=$(IBM_BASE_REPO)/.git rev-parse HEAD),   \
-				$(shell git --git-dir=$(IBM_BASE_REPO)/.git config remote.origin.url), \
-				$(VER),        \
-				$(ARCH)            )
+	$(call build-mq-ibm-raw,                \
+		mq-container/Dockerfile-server, \
+		$<,                             \
+		$(IBM_PRD_IMG):$(IBM_PRD_TAG),  \
+		$(shell git --git-dir=$(IBM_BASE_REPO)/.git rev-parse HEAD), \
+		$(shell git --git-dir=$(IBM_BASE_REPO)/.git config remote.origin.url), \
+		$(VER),                         \
+		$(ARCH)                         )
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
+
 mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
+ifdef HTTP_PROXY
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
 			-Dhttps.proxyPort=$(HTTP_PRX_PORT)           \
 			-jar bin/GetMQFix.jar -u $(IBM_USER)         \
 			-x                                           \
 			-o $(dir $@) $(basename $(basename $(notdir $@))) 
+else
+#$(error HTTP_PROXY not set )
+endif
 
 # ------------------------------------------------------------------------------
 # build images
@@ -442,24 +447,25 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 # ------------------------------------------------------------------------------
 # build IBM, runmqserver based RAW image
 #   take base image(s), add runmqserver & MQ
-# podman build --tag ibm-mqadvanced-server:9.3.5.1-amd64 --file Dockerfile-server 
-#     --build-arg IMAGE_REVISION="41981f659c66fead6ca8b58015dc18d4af31c70b" 
-#      --build-arg IMAGE_SOURCE="https://github.com/ibm-messaging/mq-container" --build-arg IMAGE_TAG="ibm-mqadvanced-server:9.3.5.1-amd64" --build-arg MQ_ARCHIVE="downloads/IBM_MQ_9.3.5_LINUX_X86-64_NOINST.tar.gz" --label version=9.3.5.1 --label name=ibm-mqadvanced-server --label build-date=2024-09-05T14:32:51+0000 --label architecture="amd64" --label run="podman run -d -e LICENSE=accept ibm-mqadvanced-server:9.3.5.1-amd64" --label vcs-ref=41981f659c66fead6ca8b58015dc18d4af31c70b --label vcs-type=git --label vcs-url=https://github.com/ibm-messaging/mq-container    --target mq-server .
-#  --build-arg MQ_ARCHIVE="downloads/9.3.5.1-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz" \
 # ------------------------------------------------------------------------------
 define build-mq-ibm-raw
-	$(BUILD)                                 \
-	  --file $(1)                            \
-	  --tag  $(3)                            \
-          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(3))                        \
+	$(BUILD)                                   \
+	  --file $(1)                              \
+	  --tag  $(3)                              \
+          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(3))          \
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
-	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(4))                   \
-	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(5))                 \
-	  --label version=$(subst $(empty) ,,$(6))                      \
-	  --label name=$(word 1,$(subst :, ,$(3)))               \
-	  --label build-date=$(shell date +%Y-%m-%dT%H:%M:%S%z)      \
-	  --label architecture=$(subst $(empty) ,,$(7))         \
-	  --label run="podman run -d -e LICENSE=accept ibm-mqadvanced-server:9.3.5.1-amd64" --label vcs-ref=41981f659c66fead6ca8b58015dc18d4af31c70b --label vcs-type=git --label vcs-url=https://github.com/ibm-messaging/mq-container    --target mq-server mq-container/
+	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(4))     \
+	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(5))       \
+	  --label version=$(subst $(empty) ,,$(6))                \
+	  --label name=$(word 1,$(subst :, ,$(3)))                \
+	  --label build-date=$(shell date +%Y-%m-%dT%H:%M:%S%z)   \
+	  --label architecture=$(subst $(empty) ,,$(7))           \
+	  --label run="podman run -d -e LICENSE=accept $(3)"      \
+	  --label vcs-type=git                                    \
+	  --label vcs-ref=IMAGE_REVISION=$(subst $(empty) ,,$(4)) \
+	  --label vcs-url=IMAGE_SOURCE=$(subst $(empty) ,,$(5))   \
+	  --target mq-server \
+	  mq-container/
 endef
 
 #  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
