@@ -203,9 +203,8 @@ IBM_USER := mqadmin@deutsche-boerse.com
 # ------------------------------------------------------------------------------
 # artifactory
 # ------------------------------------------------------------------------------
-REM_REPO := ibmmq-docker.artifactory.dbgcloud.io
-MQ_REPO  := $(REM_REPO)/ibmmq-server
-OS_REPO  := $(REM_REPO)/ubi8
+MQ_REPO  := $(MQADM_ARTFCT)/ibmmq-server
+OS_REPO  := $(MQADM_ARTFCT)/ubi8
 
 # -----
 # Image name build by IBM Makefile
@@ -367,13 +366,13 @@ ibm-deploy: ibm-deploy-dev ibm-deploy-prd
 
 ibm-deploy-dev:
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(DOCKER) login --get-login $(REM_REPO) || $(DOCKER) login $(REM_REPO)
+	$(DOCKER) login --get-login $(MQADM_ARTFCT) || $(DOCKER) login $(MQADM_ARTFCT)
 	$(DOCKER) push $(MQ_REPO)/$(DBAG_DEV_IMG):$(EMP_DEV_IBM_TAG)
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
 ibm-deploy-prd:
 	@date "+%H:%M:%S start $@" >> .build.time
-	$(DOCKER) login --get-login $(REM_REPO) || $(DOCKER) login $(REM_REPO)
+	$(DOCKER) login --get-login $(MQADM_ARTFCT) || $(DOCKER) login $(MQADM_ARTFCT)
 	$(DOCKER) push $(MQ_REPO)/$(DBAG_PRD_IMG):$(EMP_PRD_IBM_TAG)
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
