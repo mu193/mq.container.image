@@ -316,8 +316,8 @@ ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-IBM-MQ-Advanced-Non-
 		mq-container/Dockerfile-server, \
 		$<,                             \
 		$(IBM_PRD_IMG):$(IBM_PRD_TAG),  \
-		$(shell git --git-dir=$(IBM_BASE_REPO)/.git rev-parse HEAD), \
 		$(shell git --git-dir=$(IBM_BASE_REPO)/.git config remote.origin.url), \
+		$(shell git --git-dir=$(IBM_BASE_REPO)/.git rev-parse HEAD), \
 		$(VER),                         \
 		$(ARCH)                         )
 	@date "+%H:%M:%S ende  $@" >> .build.time
@@ -450,6 +450,14 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 # ------------------------------------------------------------------------------
 # build IBM, runmqserver based RAW image
 #   take base image(s), add runmqserver & MQ
+# attributes:
+#   01 Dockerfile name
+#   02 Archive with IBM MQ Install Media in zip form
+#   03 Goal Image Name : Image Tag
+#   04 IBM Dockerfile Source e.g. https://github.com/ibm-messaging/mq-container
+#   05 IBM Dockerfile Revision
+#   06 IBM MQ Version
+#   07 Architecture e.g amd64
 # ------------------------------------------------------------------------------
 define build-mq-ibm-raw
 	$(BUILD)                                   \
@@ -457,8 +465,8 @@ define build-mq-ibm-raw
 	  --tag  $(3)                              \
           --build-arg IMAGE_TAG=$(subst $(empty) ,,$(3))          \
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
-	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(4))     \
-	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(5))       \
+	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(4))       \
+	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(5))     \
 	  --build-arg BASE_IMAGE="$(OS_REPO)/$(BASE_OS_IMG)"      \
 	  --label version=$(subst $(empty) ,,$(6))                \
 	  --label name=$(word 1,$(subst :, ,$(3)))                \
