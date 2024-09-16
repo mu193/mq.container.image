@@ -202,12 +202,16 @@ IBM_USER := mqadmin@deutsche-boerse.com
 
 # ------------------------------------------------------------------------------
 # artifactory
+# ARG BASE_IMAGE=registry.access.redhat.com/ubi8/ubi-minimal
+# ARG BASE_TAG=8.9-1161.1715068733
+# ARG BUILDER_IMAGE=registry.access.redhat.com/ubi8/go-toolset
+# ARG BUILDER_TAG=1.20.12-5.1713833129
 # ------------------------------------------------------------------------------
 MQ_REPO  := $(MQADM_ARTFCT)/ibmmq-server
-OS_REPO  := $(MQADM_ARTFCT)/ubi8
+OS_REPO  := $(MQADM_ARTFCT)/$(UBI)
 
 # -----
-# Image name build by IBM Makefile
+# Image name build by IBM Makefile (mq-container/Dockerfile-*)
 # -----
 IBM_DEV_IMG := ibm-mqadvanced-server-dev
 IBM_DEV_TAG := $(VER)-$(ARCH)
@@ -216,12 +220,12 @@ IBM_PRD_IMG := ibm-mqadvanced-server
 IBM_PRD_TAG := $(VER)-$(ARCH)
 
 # -----
-# Base Image name for DBAG 
+# Base Image 
 # -----
-BASE_OS_IMG   := ubi-minimal
-BASE_OS_TAG   := 8.9
-BUILDER_IMG := ubi
-BUILDER_TAG := 8.9
+# BASE_OS_IMG  : base image name; set in artifactory.mk
+# BASE_OS_TAG  : base image tag ; set in versions.mk
+# BUILD_GO_IMG : builder image name; set in artifactory.mk
+# BUILD_GO_TAG : builder image name; set in versions.mk
 
 # -----
 # Image name build by this Makefile
@@ -287,9 +291,10 @@ help:
 	@echo "| ------------------------------------------------------------ |"
 	@echo 
 
-vara :
-	@echo $(HTTP_PRX_IP)
-	@echo $(HTTP_PRX_PORT)
+################################################################################
+#                               I N C L U D E S                                #
+################################################################################
+include mk.inc/vara.mk
 
 ################################################################################
 #   R U N M Q S E R V E R   B A S E D   I M A G E S  
@@ -454,6 +459,7 @@ define build-mq-ibm-raw
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
 	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(4))     \
 	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(5))       \
+	  --build-arg BASE_IMAGE="$(OS_REPO)/$(BASE_OS_IMG)"      \
 	  --label version=$(subst $(empty) ,,$(6))                \
 	  --label name=$(word 1,$(subst :, ,$(3)))                \
 	  --label build-date=$(shell date +%Y-%m-%dT%H:%M:%S%z)   \
@@ -466,6 +472,10 @@ define build-mq-ibm-raw
 	  mq-container/
 endef
 
+#  --build-arg BASE_IMAGE="registry.access.redhat.com/ubi8/ubi-minimal"  \
+#  --build-arg BASE_TAG="8.9-1161.1715068733"  \
+#  --build-arg BUILDER_IMAGE="registry.access.redhat.com/ubi8/go-toolset"  \
+#  --build-arg BUILDER_TAG="1.20.12-5.1713833129"  \
 #  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
 
 # ------------------------------------------------------------------------------

@@ -14,7 +14,10 @@
 #  Artifactory / Repository for base image e.g Red Hat.                        #
 #                                                                              #
 #------------------------------------------------------------------------------#
-OS_ARTFCT := registry.access.redhat.com
+OS_ARTFCT   := registry.access.redhat.com
+UBI         := ubi8
+BASE_OS_IMG := ubi-minimal
+BUILDER_IMG := ubi
 
 #------------------------------------------------------------------------------#
 #  MQADM_ARTFCT: STORE Artifacotry                                             #
@@ -31,4 +34,5 @@ MQADM_ARTFCT := ibmmq-docker.artifactory.dbgcloud.io
 #                                                                              #
 #------------------------------------------------------------------------------#
 LOC_ARTFCT := localhost
+
 
