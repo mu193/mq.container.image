@@ -473,7 +473,6 @@ define build-mq-ibm-raw
 	  --build-arg BASE_TAG=$(subst $(empty) ,,$(4))           \
 	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(6))       \
 	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(7))     \
-	  --build-arg BASE_IMAGE="$(OS_REPO)/$(BASE_OS_IMG)"      \
 	  --label version=$(subst $(empty) ,,$(8))                \
 	  --label name=$(word 1,$(subst :, ,$(5)))                \
 	  --label build-date=$(shell date +%Y-%m-%dT%H:%M:%S%z)   \
