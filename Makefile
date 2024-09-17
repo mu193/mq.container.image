@@ -315,8 +315,10 @@ ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-IBM-MQ-Advanced-Non-
 	$(call build-mq-ibm-raw,                \
 		mq-container/Dockerfile-server, \
 		$<,                             \
-		registry.access.redhat.com/ubi8/ubi-minimal,  \
-		8.9-1161.1715068733,          \
+		$(OS_REPO)/$(BASE_OS_IMG),      \
+		$(BASE_OS_TAG),                 \
+		$(OS_REPO)/$(BUILDER_GO_IMG),   \
+		$(BUILDER_GO_TAG),              \
 		$(IBM_PRD_IMG):$(IBM_PRD_TAG),  \
 		$(shell git --git-dir=$(IBM_BASE_REPO)/.git config remote.origin.url), \
 		$(shell git --git-dir=$(IBM_BASE_REPO)/.git rev-parse HEAD), \
@@ -457,30 +459,34 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 #   02 Archive with IBM MQ Install Media in zip form
 #   03 Base OS Image 
 #   04 Base OS Tag 
-#   05 Goal Image Name : Image Tag
-#   06 IBM Dockerfile Source e.g. https://github.com/ibm-messaging/mq-container
-#   07 IBM Dockerfile Revision
-#   08 IBM MQ Version
-#   09 Architecture e.g amd64
+#      Base GO Image
+#      Base GO Tag
+#   07 Goal Image Name : Image Tag
+#   08 IBM Dockerfile Source e.g. https://github.com/ibm-messaging/mq-container
+#   09 IBM Dockerfile Revision
+#   10 IBM MQ Version
+#   11 Architecture e.g amd64
 # ------------------------------------------------------------------------------
 define build-mq-ibm-raw
 	$(BUILD)                                   \
 	  --file $(1)                              \
-	  --tag  $(5)                              \
-          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(5))          \
+	  --tag  $(7)                              \
+          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(7))          \
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
 	  --build-arg BASE_IMAGE=$(subst $(empty) ,,$(3))         \
 	  --build-arg BASE_TAG=$(subst $(empty) ,,$(4))           \
-	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(6))       \
-	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(7))     \
-	  --label version=$(subst $(empty) ,,$(8))                \
-	  --label name=$(word 1,$(subst :, ,$(5)))                \
+	  --build-arg BUILDER_IMAGE=registry.access.redhat.com/ubi8/go-toolset \
+	  --build-arg BUILDER_TAG=1.20.12-5.1713833129            \
+	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(8))       \
+	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(9))     \
+	  --label version=$(subst $(empty) ,,$(10))               \
+	  --label name=$(word 1,$(subst :, ,$(7)))                \
 	  --label build-date=$(shell date +%Y-%m-%dT%H:%M:%S%z)   \
-	  --label architecture=$(subst $(empty) ,,$(9))           \
-	  --label run="podman run -d -e LICENSE=accept $(5)"      \
+	  --label architecture=$(subst $(empty) ,,$(11))          \
+	  --label run="podman run -d -e LICENSE=accept $(7)"      \
 	  --label vcs-type=git                                    \
-	  --label vcs-url=IMAGE_SOURCE=$(subst $(empty) ,,$(6))   \
-	  --label vcs-ref=IMAGE_REVISION=$(subst $(empty) ,,$(7)) \
+	  --label vcs-url=IMAGE_SOURCE=$(subst $(empty) ,,$(8))   \
+	  --label vcs-ref=IMAGE_REVISION=$(subst $(empty) ,,$(9)) \
 	  --target mq-server \
 	  mq-container/
 endef
