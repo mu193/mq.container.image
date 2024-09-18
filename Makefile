@@ -416,21 +416,16 @@ dbag-img-prd-force: dbag-img-prd
 
 # ------------------------------------------------------------------------------
 # build images
+# MQ_ARCHIVE_DEV is a zip file containing the devel edtion non-install image
 # ------------------------------------------------------------------------------
 MQ_ARCHIVE_DEV := downloads/9.3.5.1-IBM-MQ-Advanced-for-Developers-Non-Install-LinuxX64.tar.gz
 
 $(MQ_ARCHIVE_DEV): mq-container/$(MQ_ARCHIVE_DEV)
 	$(CP) $< $@
 
-files/ibm-img.tar.gz: mq.system/dlh.ksh mq.system/editrc
+files/ibm-img.tar.gz: $(addprefix deploy/,editrc amqsstopchild)
 	[[ -d $(dir $@) ]] || $(MKDIR) $(dir $@)
 	$(ZIP) $@ $^
-
-# ???
-# MQ_ARCHIVE_DEV is a zip file containing the devel edtion non-install image
-
-# !!! 
-# be careful by adding depandencies: $^ takes them all
 
 
 dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)

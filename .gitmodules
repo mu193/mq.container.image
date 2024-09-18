@@ -4,6 +4,3 @@
 [submodule "mq.dockmq"]
 	path = mq.dockmq
 	url = git@github.deutsche-boerse.de:dev/mq.dockmq
-[submodule "mq.system"]
-	path = mq.system
-	url = git@github.deutsche-boerse.de:dev/mq.system/

@@ -14,11 +14,11 @@ WORKDIR /home/mqm/
 ADD "${FILES}" .
 
 RUN  \
-     microdnf --disableplugin=subscription-manager install ${RPMS} \
-  && microdnf --disableplugin=subscription-manager clean all       \
-  && install /tools --directory --mode 2775               \
-  && install mq.system/editrc -m 440 -o ${UID} -g root -T /.editrc \
-  && install mq.system/editrc -m 440 -o ${UID} -g root -T /.editrc 
+     microdnf --disableplugin=subscription-manager install ${RPMS}     \
+  && microdnf --disableplugin=subscription-manager clean all           \
+  && install /tools --directory --mode 2775                            \
+  && install deploy/editrc        -m 440 -o ${UID} -g root -T /.editrc \
+  && install deploy/amqsstopchild -m 750 -o ${UID} -g root -T /tools/amqsstopchild
 
 USER ${UID}
 
