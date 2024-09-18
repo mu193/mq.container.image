@@ -7,6 +7,7 @@
 #                                                                              #
 #    History:                                                                  #
 #      17.09.24 ame initial IBM Dispatched Version MQ + OS + GO                #
+#      18.09.24 ame rhel 8.10
 #                                                                              #
 ################################################################################
 
@@ -28,7 +29,7 @@ VER := 9.3.5.1
 #     - upper case 'R' is reserved for DBAG / C based deamon                   #
 #                                                                              #
 #------------------------------------------------------------------------------#
-RELEASE := 1
+RELEASE := 2
 
 #------------------------------------------------------------------------------#
 # IMAGE:                                                                       #
@@ -75,11 +76,9 @@ RELEASE := 1
 UBI         := ubi8
 
 BASE_OS_IMG := ubi-minimal
-BASE_OS_TAG := 8.9-1161.1715068733
+BASE_OS_TAG := 8.10-1052.1724178568
 
 BUILDER_GO_IMG := go-toolset
-BUILDER_GO_TAG := 1.20.12-5.1713833129
+BUILDER_GO_TAG := 1.21.11-8.1724662611
 
-# ARG BUILDER_IMAGE=registry.access.redhat.com/ubi8/go-toolset
-# ARG BUILDER_TAG=1.20.12-5.1713833129
 
