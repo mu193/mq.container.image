@@ -55,9 +55,9 @@
 #      localhost/ibm-mqadvanced-server:9.3.5.1-amd64                           #
 #    and add  further binaries and configuration files.                        #
 #    It builds following images:                                               #
-#      empty image:                                                            #
-#        localhost/ibmmq-dev:9.3.5.1-r0-empty                                  #
-#        localhost/ibmmq-prd:9.3.5.1-r0-empty                                  #
+#      base image:                                                             #
+#        localhost/ibmmq-dev:9.3.5.1-r0-base                                   #
+#        localhost/ibmmq-prd:9.3.5.1-r0-base                                   #
 #      no other:                                                               #
 #                                                                              #
 #    Empty image:                                                              #
@@ -166,6 +166,7 @@ comma:=","
 # Dynamic variables
 # ------------------------------------------------------------------------------
 ARCH := amd64
+PROD_MEDIA := IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz
 
 # ------------------------------------------------------------------------------
 # Long Time Static 
@@ -208,7 +209,7 @@ IBM_USER := mqadmin@deutsche-boerse.com
 # ARG BUILDER_TAG=1.20.12-5.1713833129
 # ------------------------------------------------------------------------------
 MQ_REPO  := $(MQADM_ARTFCT)/ibmmq-server
-OS_REPO  := $(MQADM_ARTFCT)/$(UBI)
+OS_REPO  := $(OS_ARTFCT)/$(UBI)
 
 # -----
 # Image name build by IBM Makefile (mq-container/Dockerfile-*)
@@ -234,12 +235,12 @@ DBAG_DEV_IMG = ibmmq-dev
 DBAG_PRD_IMG = ibmmq-prd
 
 EMP_DEV_IMG      := $(LOC_ARTFCT)/$(DBAG_DEV_IMG)
-EMP_DEV_IBM_TAG  := $(VER)-ri${RELEASE}-empty
-EMP_DEV_DBAG_TAG := $(VER)-RD${RELEASE}-empty
+EMP_DEV_IBM_TAG  := $(VER)-ri${RELEASE}-base
+EMP_DEV_DBAG_TAG := $(VER)-RD${RELEASE}-base
 
 EMP_PRD_IMG      := $(LOC_ARTFCT)/$(DBAG_PRD_IMG)
-EMP_PRD_IBM_TAG  := $(VER)-ri${RELEASE}-empty
-EMP_PRD_DBAG_TAG := $(VER)-RD${RELEASE}-empty
+EMP_PRD_IBM_TAG  := $(VER)-ri${RELEASE}-base
+EMP_PRD_DBAG_TAG := $(VER)-RD${RELEASE}-base
 
 # ------------------------------------------------------------------------------
 # static
@@ -310,7 +311,7 @@ ibm-pre-dev:
 	make -C $(IBM_BASE_REPO)/ build-devserver
 	@date "+%H:%M:%S ende  $@" >>  .build.time
 
-ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz Dockerfile-server)
+ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-$(PROD_MEDIA) Dockerfile-server)
 	@date "+%H:%M:%S start $@" >> .build.time
 	$(call build-mq-ibm-raw,                \
 		mq-container/Dockerfile-server, \
@@ -326,16 +327,19 @@ ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-IBM-MQ-Advanced-Non-
 		$(ARCH)                         )
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
+mq-container/downloads/$(VER)-$(PROD_MEDIA): downloads/$(VER)-$(PROD_MEDIA)
+	ln $< $@
 
-mq-container/downloads/$(VER)-IBM-MQ-Advanced-Non-Install-LinuxX64.tar.gz: 
 ifdef HTTP_PROXY
+downloads/$(VER)-$(PROD_MEDIA):
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
 			-Dhttps.proxyPort=$(HTTP_PRX_PORT)           \
 			-jar bin/GetMQFix.jar -u $(IBM_USER)         \
 			-x                                           \
 			-o $(dir $@) $(basename $(basename $(notdir $@))) 
 else
-#$(error HTTP_PROXY not set )
+downloads/$(VER)-$(PROD_MEDIA):
+	$(error HTTP_PROXY not set )
 endif
 
 # ------------------------------------------------------------------------------
@@ -463,15 +467,15 @@ dbag-img-dev: Dockerfile-dbag-dev $(MQ_ARCHIVE_DEV)
 #   11 Architecture e.g amd64
 # ------------------------------------------------------------------------------
 define build-mq-ibm-raw
-	$(BUILD)                                   \
-	  --file $(1)                              \
-	  --tag  $(7)                              \
-          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(7))          \
+	$(BUILD)                                         \
+	  --file $(1)                                    \
+	  --tag  $(7)                                    \
+          --build-arg IMAGE_TAG=$(subst $(empty) ,,$(7)) \
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
-	  --build-arg BASE_IMAGE=$(subst $(empty) ,,$(3))         \
-	  --build-arg BASE_TAG=$(subst $(empty) ,,$(4))           \
-	  --build-arg BUILDER_IMAGE=$(subst $(empty) ,,$(5))      \
-	  --build-arg BUILDER_TAG=$(subst $(empty) ,,$(6))        \
+	$(if $(strip $(4)),--build-arg BASE_IMAGE=$(subst $(empty) ,,$(3))    \
+			   --build-arg BASE_TAG=$(subst $(empty) ,,$(4)),)    \
+	$(if $(strip $(6)),--build-arg BUILDER_IMAGE=$(subst $(empty) ,,$(5)) \
+	  		   --build-arg BUILDER_TAG=$(subst $(empty) ,,$(6)),) \
 	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(8))       \
 	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(9))     \
 	  --label version=$(subst $(empty) ,,$(10))               \

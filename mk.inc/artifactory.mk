@@ -15,9 +15,6 @@
 #                                                                              #
 #------------------------------------------------------------------------------#
 OS_ARTFCT   := registry.access.redhat.com
-UBI         := ubi8
-BASE_OS_IMG := ubi-minimal
-BUILDER_IMG := ubi
 
 #------------------------------------------------------------------------------#
 #  MQADM_ARTFCT: STORE Artifacotry                                             #

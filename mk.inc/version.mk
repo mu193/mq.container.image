@@ -7,7 +7,10 @@
 #                                                                              #
 #    History:                                                                  #
 #      17.09.24 ame initial IBM Dispatched Version MQ + OS + GO                #
-#      18.09.24 ame rhel 8.10
+#      18.09.24 ame rhel 8.10                                                  #
+#      19.09.24 ame - MQ 9.4 & RHEL 9.x                                        #
+#                   - empty base_os_tag and builder_go´_tag to                 #
+#                     enforce usage of IBM default OS Version                  #
 #                                                                              #
 ################################################################################
 
@@ -17,7 +20,7 @@
 #   Used for downloading IBM MQ installation media & naming created imagesa    #
 #                                                                              #
 #------------------------------------------------------------------------------#
-VER := 9.3.5.1
+VER := 9.4.0.5
 
 #------------------------------------------------------------------------------#
 # RELEASE:                                                                     #
@@ -29,7 +32,7 @@ VER := 9.3.5.1
 #     - upper case 'R' is reserved for DBAG / C based deamon                   #
 #                                                                              #
 #------------------------------------------------------------------------------#
-RELEASE := 2
+RELEASE := 0
 
 #------------------------------------------------------------------------------#
 # IMAGE:                                                                       #
@@ -73,12 +76,14 @@ RELEASE := 2
 #                                                                              #
 #------------------------------------------------------------------------------#
 
-UBI         := ubi8
+UBI         := ubi9
 
 BASE_OS_IMG := ubi-minimal
-BASE_OS_TAG := 8.10-1052.1724178568
+BASE_OS_TAG := 
+#BASE_OS_TAG := 9.4-1194
 
 BUILDER_GO_IMG := go-toolset
-BUILDER_GO_TAG := 1.21.11-8.1724662611
+BUILDER_GO_TAG := 
+#BUILDER_GO_TAG := 1.21.11-7.1724233645
 
 

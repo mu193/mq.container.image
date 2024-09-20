@@ -14,7 +14,7 @@ WORKDIR /home/mqm/
 ADD "${FILES}" .
 
 RUN  \
-     microdnf --disableplugin=subscription-manager install ${RPMS}     \
+     microdnf --disableplugin=subscription-manager install -y ${RPMS}  \
   && microdnf --disableplugin=subscription-manager clean all           \
   && install /tools --directory --mode 2775                            \
   && install deploy/editrc        -m 440 -o ${UID} -g root -T /.editrc \
