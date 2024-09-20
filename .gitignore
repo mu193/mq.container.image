@@ -1,2 +1,4 @@
+.build.time
 downloads/
 files/
+*.swp

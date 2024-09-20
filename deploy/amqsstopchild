@@ -1,0 +1,44 @@
+#!/bin/bash
+################################################################################
+#                                                                              #
+#               S T O P   D E A D   L E T T E R   H A N D L E R                #
+#                                                                              #
+#  Description:                                                                #
+#    Dead Letter handler will be started with follwoing service:               #
+#                                                                              #
+#      DEFINE SERVICE(admin.dlh) +                                             #
+#        SERVTYPE(SERVER)        +                                             #
+#        CONTROL(QMGR)           +                                             #
+#        STARTCMD('/bin/bash')   +                                             #
+#        STARTARG('-c "+MQ_INSTALL_PATH+bin/runmqdlq</etc/mqm/dlh//std.rules"')+
+#        STOPCMD('/tools/bin/amqsstopchild')                         +         #
+#        STOPARG('+MQ_INSTALL_PATH+ -m +QMNAME+ -p +MQ_SERVER_PID+') +         #
+#        STDOUT('+MQ_Q_MGR_DATA_PATH+/errors/dlq.+QMNAME+.log')      +         #
+#        STDERR('+MQ_Q_MGR_DATA_PATH+/errors/dlq.+QMNAME+.err')      +         #
+#        REPLACE                                                               #
+#                                                                              #
+#    The process id of the starting shell is known to the queue manager,       #
+#    not th pid of the dead letter handler, which is the child of the shell    #
+#    This script takes the pid of the starting shell, and sends amqstop to     #
+#    it's only child == dead letter handler                                    #
+#                                                                              #
+#    Attributes:                                                               #
+#      1. Path to MQ Installation                                              #
+#           +MQ_INSTALL_PATH+ e.g. /opt/mqm for container installations        #
+#      2.                                                                      #
+#      3. -m <QMGR>                                                            #
+#      4.                                                                      #
+#      5. -p <SHEL-PID>                                                        #
+#    Example Attributes:                                                       #
+#      /opt/mqm -m <QMGR> -p <SHELL-PID>                                       #
+#    Example Command:                                                          #
+#      /opt/mqm/bin/amqsstop -m <QMGR> -p <DLH-PID>                            #
+#                                                                              #
+#    History:                                                                  #
+#    18.09.24 ame initial and final version (it's just one effective line)     #
+#                                                                              #
+################################################################################
+
+$1/bin/amqsstop ${@:2:$#-2} $(ps -o pid --no-headers --ppid ${@: -1})
+
+
