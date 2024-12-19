@@ -1,6 +1,6 @@
-[submodule "mq-container"]
-	path = mq-container
-	url = https://github.com/ibm-messaging/mq-container
 [submodule "mq.dockmq"]
 	path = mq.dockmq
 	url = git@github.deutsche-boerse.de:dev/mq.dockmq
+[submodule "mq-container"]
+	path = mq-container
+	url = https://github.com/ibm-messaging/mq-container
