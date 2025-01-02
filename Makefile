@@ -193,12 +193,8 @@ ZIP := /usr/bin/tar cfz
 MKDIR := /usr/bin/mkdir -p
 JAVA := /usr/bin/java 
 
-#ifndef  HTTP_PROXY
-#  $(error HTTP_PROXY not set )
-#endif
-
-HTTP_PRX_IP:=$(subst /,,$(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$2}'))
-HTTP_PRX_PORT :=        $(shell echo $(HTTP_PROXY)|$(AWK) -F: '{print $$3}')
+HTTP_PRX_IP:=$(subst /,,$(shell echo $(http_proxy)|$(AWK) -F: '{print $$2}'))
+HTTP_PRX_PORT :=        $(shell echo $(http_proxy)|$(AWK) -F: '{print $$3}')
 IBM_USER := mqadmin@deutsche-boerse.com 
 
 # ------------------------------------------------------------------------------
@@ -330,8 +326,9 @@ ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-$(PROD_MEDIA) Docker
 mq-container/downloads/$(VER)-$(PROD_MEDIA): downloads/$(VER)-$(PROD_MEDIA)
 	ln $< $@
 
-ifdef HTTP_PROXY
+ifdef http_proxy
 downloads/$(VER)-$(PROD_MEDIA):
+	[ -d $(dirname $@) ] && mkdir -p $@ 
 	$(CAT) etc/.passwd |$(JAVA) -Dhttps.proxyHost=$(HTTP_PRX_IP) \
 			-Dhttps.proxyPort=$(HTTP_PRX_PORT)           \
 			-jar bin/GetMQFix.jar -u $(IBM_USER)         \

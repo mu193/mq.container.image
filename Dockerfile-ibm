@@ -1,17 +1,23 @@
-FROM $BASE_MQ_IMG
 
 ARG BASE_MQ_IMG
+
+FROM ${BASE_MQ_IMG}
+
 ARG RPMS
 ARG FILES
 
 ARG UID="1001"
 
-
 USER 0
 
 WORKDIR /home/mqm/
 
+# podman 5.2.2 bug 
+
+RUN mkdir -p /home/mqm ; echo "rpms=>${RPMS}< file=>${FILES}<"
+
 ADD "${FILES}" .
+#ADD files/ibm-img.tar.gz .
 
 RUN  \
      microdnf --disableplugin=subscription-manager install -y ${RPMS}  \
