@@ -20,7 +20,7 @@
 #   Used for downloading IBM MQ installation media & naming created imagesa    #
 #                                                                              #
 #------------------------------------------------------------------------------#
-VER := 9.4.1.0
+VER := 9.4.1.1
 
 #------------------------------------------------------------------------------#
 # RELEASE:                                                                     #
@@ -79,11 +79,9 @@ RELEASE := 0
 UBI         := ubi9
 
 BASE_OS_IMG := ubi-minimal
-BASE_OS_TAG := 
-#BASE_OS_TAG := 9.4-1194
+BASE_OS_TAG := 9.5-1734497536
 
 BUILDER_GO_IMG := go-toolset
-BUILDER_GO_TAG := 
-#BUILDER_GO_TAG := 1.21.11-7.1724233645
+BUILDER_GO_TAG := 1.22.9-1734626445
 
 
