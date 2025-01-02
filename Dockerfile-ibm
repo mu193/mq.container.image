@@ -12,9 +12,9 @@ USER 0
 
 WORKDIR /home/mqm/
 
-# podman 5.2.2 bug 
+# podman 5.2.2 bug; WORKDIR not created automaticaly
 
-RUN mkdir -p /home/mqm ; echo "rpms=>${RPMS}< file=>${FILES}<"
+RUN mkdir -p /home/mqm 
 
 ADD "${FILES}" .
 #ADD files/ibm-img.tar.gz .
