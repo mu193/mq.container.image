@@ -3,6 +3,13 @@
 ## Download sources
 - [Red Hat](https://catalog.redhat.com/search?gs&q=)
 - [IBM MQ](https://www.ibm.com/support/fixcentral)
+- [RHEL ubi9 minimal](https://catalog.redhat.com/software/containers/ubi9/ubi-minimal/615bd9b4075b022acc111bf5)
+- [RHEL ubi9 go toolset](https://catalog.redhat.com/software/containers/ubi9/go-toolset/61e5c00b4ec9945c18787690?q=ubi%20go%20&architecture=amd64&image=6826467f5217539aa648f959)
+
+## How to build
+1. create a new branch, branch name should include MQ Version V.R.M.F 
+2. update mk.inc/version.mk
+3. make ....
 
 ## List of Images
 
