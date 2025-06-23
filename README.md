@@ -8,13 +8,15 @@
 
 ## How to build
 1. create a new branch, branch name should include MQ Version V.R.M.F 
-2. update mk.inc/version.mk
-3. make ....
+2. update mq-container/ if V.R.M is changed
+3. update mk.inc/version.mk
+4. make ....
 
 ## List of Images
 
 | Name | MQ |OS | GO | Type | RL | Description |
 |:----:|----------|----------|----------|-------------| --:|-----------|
+|[9.4.3.0-ri0-base](https://artifactory.dbgcloud.io/ui/repos/tree/Properties/ibmmq-docker-local/ibmmq-server/ibmmq-prd/9.4.3.0-ri0-base)|[9.4.3.0](https://www.ibm.com/support/pages/fix-list-ibm-mq-version-94x-continuous-delivery#9430)|[9.6-1749489516](https://catalog.redhat.com/software/containers/ubi9-minimal/61832888c0d15aff4912fe0d?image=68472146bd9215d713868c4f)|[1.22.9-1734626445](https://catalog.redhat.com/software/containers/ubi9/go-toolset/61e5c00b4ec9945c18787690?image=684963a14490a6f300b304ec)|IBM|0|RHEL 9.6 <br> GO image 1.23.9 <br> |
 |[9.4.2.1-ri0-base](https://artifactory.dbgcloud.io/ui/repos/tree/Properties/ibmmq-docker-local/ibmmq-server/ibmmq-prd/9.4.2.1-ri0-base)|[9.4.2.1](https://www.ibm.com/support/pages/fix-list-ibm-mq-version-94x-continuous-delivery#9421)|[9.6-1749489516](https://catalog.redhat.com/software/containers/ubi9-minimal/61832888c0d15aff4912fe0d?image=68472146bd9215d713868c4f)|[1.22.9-1734626445](https://catalog.redhat.com/software/containers/ubi9/go-toolset/61e5c00b4ec9945c18787690?image=684963a14490a6f300b304ec)|IBM|0|RHEL 9.6 <br> GO image 1.23.9 <br> |
 |[9.4.1.1-ri0-base](https://artifactory.dbgcloud.io/ui/repos/tree/Properties/ibmmq-docker-local/ibmmq-server/ibmmq-prd/9.4.1.1-ri0-base)|[9.4.1.1](https://www.ibm.com/support/pages/fix-list-ibm-mq-version-94x-continuous-delivery#9411)|[9.5-1731604394](https://catalog.redhat.com/software/containers/ubi9-minimal/61832888c0d15aff4912fe0d)|[1.22.9-1734626445](https://catalog.redhat.com/software/containers/ubi9/go-toolset/61e5c00b4ec9945c18787690)|IBM|0|RHEL 9.5 <br> GO image 1.22.9 <br> |
 |[9.4.1.0-ri0-base](https://artifactory.dbgcloud.io/ui/repos/tree/Properties/ibmmq-docker-local/ibmmq-server/ibmmq-prd/9.4.1.0-ri0-base)|[9.4.1.0](https://www.ibm.com/support/pages/fix-list-ibm-mq-version-94x-continuous-delivery#9410)|[9.5-1731604394](https://catalog.redhat.com/software/containers/ubi9-minimal/61832888c0d15aff4912fe0d)|[1.22.9-1734626445](https://catalog.redhat.com/software/containers/ubi9/go-toolset/61e5c00b4ec9945c18787690)|IBM|0|RHEL 9.5 <br> GO image 1.22.9 <br> |
