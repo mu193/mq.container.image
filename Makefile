@@ -241,7 +241,7 @@ EMP_PRD_DBAG_TAG := $(VER)-RD${RELEASE}-base
 # ------------------------------------------------------------------------------
 # static
 # ------------------------------------------------------------------------------
-EXTRA_RPMS := "less openssl"
+EXTRA_RPMS := "less openssl net-tools nmap-ncat"
 BUILD_RPMS := "git make gcc"
 MQM_USER_ID := 1001
 DOCKMQ_DIR := mq.dockmq
