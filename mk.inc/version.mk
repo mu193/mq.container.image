@@ -32,7 +32,7 @@ VER := 9.4.4.1
 #     - upper case 'R' is reserved for DBAG / C based deamon                   #
 #                                                                              #
 #------------------------------------------------------------------------------#
-RELEASE := 1
+RELEASE := 2
 
 #------------------------------------------------------------------------------#
 # IMAGE:                                                                       #
@@ -79,9 +79,9 @@ RELEASE := 1
 UBI         := ubi9
 
 BASE_OS_IMG := ubi-minimal
-BASE_OS_TAG := 9.7-1770203734
+BASE_OS_TAG := 9.8-1785214301
 
 BUILDER_GO_IMG := go-toolset
-BUILDER_GO_TAG := 1.25.5-1769430014
+BUILDER_GO_TAG := 1.26.5-1785156757
 
 
