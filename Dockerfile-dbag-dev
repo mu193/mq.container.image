@@ -64,25 +64,25 @@
 #    MQ_LOG_MOUNT                                                              #
 #      Mount point for log file system including transactional logs            #
 #    MQ_SYS_MOUNT                                                              #
-#      Mount point for mq system including mqs.ini                #
-#    MQ_ETC_MOUNT                                                          #
+#      Mount point for mq system including mqs.ini                             #
+#    MQ_ETC_MOUNT                                                              #
 #      This is not a real mount point. It includes following directories:      #
 #        - $(MQ_ETC_MOUNT)/ini                                                 #
-#            in qm.ini used for: AutoConfig.IniConfig               #
+#            in qm.ini used for: AutoConfig.IniConfig                          #
 #        - $(MQ_ETC_MOUNT)/mqsc                                                #
-#            in qm.ini used for: AutoConfig.MQSCConfig              #
-#        - $(MQ_ETC_MOUNT)/ssl                                          #
-#            this where SSL is maped by k8s                      #
-#            attention, this not where gsk repo is stored            #
+#            in qm.ini used for: AutoConfig.MQSCConfig                         #
+#        - $(MQ_ETC_MOUNT)/ssl                                                 #
+#            this where SSL is maped by k8s                                    #
+#            attention, this not where gsk repo is stored                      #
 #    RPM                                                                       #
 #      additional rpms for the runtime image                                   #
 #        install only rpms that are secure and small. Dont install vi          #
-#    BUILD_RPM                                                    #
-#      additional rpms needed during build phase only.                     #
-#      Any rpm can be installed, size doesn't metter.                 #
+#    BUILD_RPM                                                                 #
+#      additional rpms needed during build phase only.                         #
+#      Any rpm can be installed, size doesn't metter.                          #
 #      Don't install them on the runtime image, only on temporarary stages     #
-#    MQM_USER_ID                                        #
-#      An image must not run as root.            #
+#    MQM_USER_ID                                                               #
+#      An image must not run as root.                                          #
 #                                                                              #
 ################################################################################
 

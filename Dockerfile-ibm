@@ -23,8 +23,11 @@ RUN  \
      microdnf --disableplugin=subscription-manager install -y ${RPMS}  \
   && microdnf --disableplugin=subscription-manager clean all           \
   && install /tools --directory --mode 2775                            \
+  && install cfg/   --directory --mode 2775                            \
   && install deploy/editrc        -m 440 -o ${UID} -g root -T /.editrc \
-  && install deploy/amqsstopchild -m 750 -o ${UID} -g root -T /tools/amqsstopchild
+  && install deploy/amqsstopchild -m 750 -o ${UID} -g root -T /tools/amqsstopchild \
+  && rm deploy/editrc              \
+  && rm deploy/amqsstopchild 
 
 USER ${UID}
 
