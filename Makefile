@@ -323,8 +323,12 @@ ibm-pre-prd: $(addprefix $(IBM_BASE_REPO)/,downloads/$(VER)-$(PROD_MEDIA) Docker
 		$(ARCH)                         )
 	@date "+%H:%M:%S ende  $@" >> .build.time
 
-mq-container/downloads/$(VER)-$(PROD_MEDIA): downloads/$(VER)-$(PROD_MEDIA)
+mq-container/downloads/$(VER)-$(PROD_MEDIA): downloads/$(VER)-$(PROD_MEDIA) | mq-container/downloads/
 	ln $< $@
+
+mq-container/downloads/ :
+	$(MKDIR) $@  
+
 
 ifdef http_proxy
 downloads/$(VER)-$(PROD_MEDIA):
@@ -469,10 +473,10 @@ define build-mq-ibm-raw
 	  --tag  $(7)                                    \
           --build-arg IMAGE_TAG=$(subst $(empty) ,,$(7)) \
 	  --build-arg MQ_ARCHIVE="$(notdir $(patsubst %/,%,$(dir $2)))/$(notdir $2)" \
-	$(if $(strip $(4)),--build-arg BASE_IMAGE=$(subst $(empty) ,,$(3))    \
-			   --build-arg BASE_TAG=$(subst $(empty) ,,$(4)),)    \
-	$(if $(strip $(6)),--build-arg BUILDER_IMAGE=$(subst $(empty) ,,$(5)) \
-	  		   --build-arg BUILDER_TAG=$(subst $(empty) ,,$(6)),) \
+	$(if $(strip $(4)),--build-arg UBI_BASE_IMAGE=$(subst $(empty) ,,$(3))    \
+			   --build-arg UBI_BASE_TAG=$(subst $(empty) ,,$(4)),)    \
+	$(if $(strip $(6)),--build-arg UBI_BUILDER_IMAGE=$(subst $(empty) ,,$(5)) \
+			   --build-arg UBI_BUILDER_TAG=$(subst $(empty) ,,$(6)),) \
 	  --build-arg IMAGE_SOURCE=$(subst $(empty) ,,$(8))       \
 	  --build-arg IMAGE_REVISION=$(subst $(empty) ,,$(9))     \
 	  --label version=$(subst $(empty) ,,$(10))               \
@@ -537,5 +541,3 @@ endef
 define show-attr
 	echo ">$1< >$2< >$3<"
 endef	
-
-
